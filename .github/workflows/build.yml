@@ -16,8 +16,8 @@ jobs:
       - name: Build Exe
         working-directory: ./Traincrew_depMelody
         run: |
-          dotnet publish -c Release ` 
-            -o ..\out ` 
+          dotnet publish -c Release `
+            -o ..\out `
             -p:PublishSingleFile=true `
             -p:EnableWindowsTargeting=true
       - name: Upload Exe
