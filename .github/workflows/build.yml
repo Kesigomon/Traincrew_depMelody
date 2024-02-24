@@ -22,7 +22,7 @@ jobs:
           dotnet publish -c Release \
             -o ../out \
             -p:PublishSingleFile=true --self-contained ${{ matrix.standalone }} \
-            -p::EnableWindowsTargeting=true
+            -p:EnableWindowsTargeting=true
       - name: Upload Exe
         uses: actions/upload-artifact@v3
         with:
