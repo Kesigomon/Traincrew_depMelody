@@ -53,7 +53,7 @@ namespace Traincrew_depMelody
             { 
                 // Todo: どの発車メロディを鳴らすかを決める
                 // 発車メロディを再生
-                var path = "./sound/" + previousState.nextStaName + "_" + trackNumber + ".wav";
+                var path = Environment.CurrentDirectory + @"\sound\" + previousState.nextStaName + "_" + trackNumber + ".wav";
                 // ファイルが存在しない場合はデフォルトの発車メロディを鳴らす
                 if (System.IO.File.Exists(path))
                 {
@@ -61,14 +61,14 @@ namespace Traincrew_depMelody
                 }
                 else
                 {
-                    player.Open(new Uri(@"./sound/default.wav"));
+                    player.Open(new Uri(Environment.CurrentDirectory + @"\sound\default.wav"));
                 }
                 player.Play();
             }
             else
             {
                 // ドアが閉まりますを鳴らす
-                player.Open(new Uri(@"./sound/doorClosing_" + trackNumber + ".wav"));
+                player.Open(new Uri(Environment.CurrentDirectory + @"\sound\doorClosing_" + trackNumber + ".wav"));
                 player.Play();
             }
         }
