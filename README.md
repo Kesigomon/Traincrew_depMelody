@@ -20,8 +20,8 @@ https://dotnet.microsoft.com/ja-jp/download/dotnet/thank-you/runtime-desktop-8.0
 ### 音源用意
 以下3つの音源を用意しましょう。exeと同じパスに置けばOKです。
 - `./sound/館浜_1.wav`
- - 館浜1番乗り場で流れるメロディです。
- - 同じ要領で、駅名_n.wav とすれば、その駅のn番線で流れる音源になります。
+  - 館浜1番乗り場で流れるメロディです。
+  - 同じ要領で、駅名_n.wav とすれば、その駅のn番線で流れる音源になります。
 - `./sound/default.wav`
   - 発車音声が設定されていない場合はこちらが発車メロディとして流れます
 - `./sound/doorClosing_1.wav`
