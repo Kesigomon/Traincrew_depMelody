@@ -26,9 +26,15 @@ jobs:
             -p:PublishSingleFile=true \
             -p:EnableWindowsTargeting=true \
             --self-contained ${{ matrix.standalone }}
-      - name: Upload Exe
-        uses: actions/upload-artifact@v3
+      - name: Zip binaries
+        run: |
+          cd out
+          zip -r out.zip .
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2.9.0
         with:
-          name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}
-          path: out
-      
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: out.zip
+          asset_name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}.zip
+          tag: latest
+          overwrite: true
