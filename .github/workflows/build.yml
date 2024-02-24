@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -16,13 +16,13 @@ jobs:
       - name: Build Exe
         working-directory: ./Traincrew_depMelody
         run: |
-          dotnet publish -c Release \
-            -o ../out \
-            -p:PublishSingleFile=true \
+          dotnet publish -c Release ^
+            -o ..\out ^
+            -p:PublishSingleFile=true ^
             -p:EnableWindowsTargeting=true
       - name: Upload Exe
         uses: actions/upload-artifact@v3
         with:
-          name: Traincrew_depMelody-${{ (matrix.standalone && '-standalone') || '' }}.exe
+          name: Traincrew_depMelody.exe
           path: out/Traincrew_depMelody.exe
       
