@@ -6,9 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        standalone: [true, false]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -21,7 +18,7 @@ jobs:
         run: |
           dotnet publish -c Release \
             -o ../out \
-            -p:PublishSingleFile=true --self-contained ${{ matrix.standalone }} \
+            -p:PublishSingleFile=true \
             -p:EnableWindowsTargeting=true
       - name: Upload Exe
         uses: actions/upload-artifact@v3
