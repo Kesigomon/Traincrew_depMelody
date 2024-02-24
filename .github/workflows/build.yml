@@ -1,0 +1,30 @@
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        standalone: [true, false]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup dotnet 8.0.x
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build Exe
+        working-directory: ./Traincrew_depMelody
+        run: |
+          dotnet publish -c Release \
+            -o ../out \
+            -p:PublishSingleFile=true --self-contained ${{ matrix.standalone }}
+      - name: Upload Exe
+        uses: actions/upload-artifact@v3
+        with:
+          name: Traincrew_depMelody-${{ (matrix.standalone && '-standalone') || '' }}.exe
+          path: out/Traincrew_depMelody.exe
+      
