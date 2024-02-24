@@ -24,6 +24,7 @@ jobs:
             -o ../out \
             -r win-${{ matrix.platform }} \
             -p:PublishSingleFile=true \
+            -p: EnableWindowsTargeting=true \
             --self-contained ${{ matrix.standalone }}
       - name: Upload Exe
         uses: actions/upload-artifact@v3
