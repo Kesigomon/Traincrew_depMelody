@@ -5,6 +5,35 @@ on:
 permissions:
   contents: write
 jobs:
+  create_new_release:
+    runs-on: ubuntu-latest
+    name: "Create New Release"
+    steps:
+      - name: Get latest release
+        id: latest_release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const response = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            return response.data.tag_name;
+      - name: Bump patch version
+        id: bump_version
+        run: |
+          echo ::set-output name=version::$(echo ${{ steps.latest_release.outputs.result }} | \
+            awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
+      - name: Create New release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.bump_version.outputs.version }}
+          release_name: ${{ steps.bump_version.outputs.version }}
+          draft: false
+          prerelease: false
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -31,26 +60,11 @@ jobs:
         run: |
           cd out
           zip -r ../out.zip .
-      - name: Get latest release
-        id: latest_release
-        uses: actions/github-script@v5
-        with:
-          script: |
-            const response = await github.rest.repos.getLatestRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo
-            });
-            return response.data.tag_name;
-      - name: Bump patch version
-        id: bump_version
-        run: |
-          echo ::set-output name=version::$(echo ${{ steps.latest_release.outputs.result }} | \
-            awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.9.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: out.zip
           asset_name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}.zip
-          tag: ${{ steps.get_release.outputs.name }}
+          tag: ${{ steps.create_release.outputs.tag_name }}
           overwrite: true
