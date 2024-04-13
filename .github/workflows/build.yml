@@ -26,14 +26,7 @@ jobs:
             awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
       - name: Create New release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.bump_version.outputs.version }}
-          release_name: ${{ steps.bump_version.outputs.version }}
-          draft: false
-          prerelease: false
+        
   build:
     runs-on: ubuntu-latest
     name: "Build"
@@ -68,5 +61,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: out.zip
           asset_name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}.zip
-          tag: ${{ steps.create_release.outputs.tag_name }}
+          tag: ${{ needs.create_new_release.outputs.version }}
           overwrite: true
