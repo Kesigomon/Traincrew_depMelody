@@ -36,6 +36,8 @@ jobs:
           prerelease: false
   build:
     runs-on: ubuntu-latest
+    name: "Build"
+    needs: create_new_release
     strategy:
       matrix:
         platform: [ 'x64', 'x86' ]
