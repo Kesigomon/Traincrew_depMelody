@@ -25,7 +25,7 @@ jobs:
         id: bump_version
         run: |
           version=$(echo ${{ steps.latest_release.outputs.result }} | awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
-          echo "version=$(version)" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
       - name: Create New Release
         id: create_release
         uses: actions/create-release@v1
