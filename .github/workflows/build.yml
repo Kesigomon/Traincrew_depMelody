@@ -67,5 +67,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: out.zip
           asset_name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}.zip
-          tag: ${{ steps.bump_version.outputs.version }}
+          tag: ${{ needs.create_new_release.outputs.version }}
           overwrite: true
