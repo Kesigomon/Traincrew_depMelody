@@ -8,6 +8,8 @@ jobs:
   create_new_release:
     runs-on: ubuntu-latest
     name: "Create New Release"
+    outputs:
+      version: ${{ steps.latest_release.outputs.version }}
     steps:
       - name: Get latest release
         id: latest_release
