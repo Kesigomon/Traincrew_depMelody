@@ -31,11 +31,27 @@ jobs:
         run: |
           cd out
           zip -r ../out.zip .
+      - name: Calc new release tag
+        id: get_release
+        # latestのversionのパッチバージョンを上げたバージョンを出力する
+        run: echo ::set-output name=tag::$(echo ${{ github.ref }} | \
+          sed -e 's/refs\/tags\/v//g' | \
+          awk -F. '{$3+=1; OFS="."; print $1,$2,$3}')
+      - name: Create Bumped Release tag
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_release.outputs.tag }}
+          release_name: Release ${{ steps.get_release.outputs.tag }}
+          draft: false
+          prerelease: false
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.9.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: out.zip
           asset_name: Traincrew_depMelody-${{ matrix.platform }}${{ (matrix.standalone && '-standalone') || '' }}.zip
-          tag: latest
+          tag: ${{ steps.get_release.outputs.tag }}
           overwrite: true
