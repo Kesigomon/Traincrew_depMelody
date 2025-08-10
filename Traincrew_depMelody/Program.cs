@@ -26,13 +26,13 @@ public static class Program
             {
                 services.AddSingleton<IAudioPlayerRepository>(serviceProvider =>
                     serviceProvider.GetRequiredService<IMainWindow>().GetAudioPlayerRepository());
-                services.AddSingleton<IFFmpegRepository, FFmpegRepository>();
-                services.AddSingleton<IKeyboardRepository, KeyboardRepository>();
-                services.AddSingleton<ISerialPortRepository, SerialPortRepository>();
+                // services.AddSingleton<IFFmpegRepository, FFmpegRepository>();
+                // services.AddSingleton<IKeyboardRepository, KeyboardRepository>();
+                // services.AddSingleton<ISerialPortRepository, SerialPortRepository>();
                 services.AddSingleton<ITrackRepository, TrackRepository>();
                 services.AddSingleton<ITraincrewRepository, TraincrewRepository>();
 
-                services.AddSingleton<AutoModeService>();
+                // services.AddSingleton<AutoModeService>();
                 services.AddSingleton<MainService>();
                 services.AddSingleton<MelodyPathService>();
                 services.AddSingleton<MainWindow>();
