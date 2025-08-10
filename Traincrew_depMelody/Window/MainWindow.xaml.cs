@@ -1,7 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +12,7 @@ namespace Traincrew_depMelody.Window;
 public interface IMainWindow
 {
     void SetButtonIsEnabled(bool enabled);
+    void SetTopMost(bool topMost);
     ButtonState GetButtonState();
     IAudioPlayerRepository GetAudioPlayerRepository();
 }
@@ -92,6 +91,14 @@ public partial class MainWindow : IMainWindow
         {
             ON.IsEnabled = enabled;
             OFF.IsEnabled = enabled;
+        });
+    }
+
+    public void SetTopMost(bool topMost)
+    {
+        Dispatcher.Invoke(() =>
+        {
+            Topmost = topMost;
         });
     }
 
