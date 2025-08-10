@@ -37,13 +37,13 @@ public partial class MainWindow : IMainWindow
         _task = Task.Run(async () => await RunAsync(_cancellationTokenSource.Token), CancellationToken.None);
         Closing += (_, _) => { OnClosed(); };
     }
-    
+
     private void OnClosed()
     {
         _cancellationTokenSource.Cancel();
         _task.GetAwaiter().GetResult();
     }
-    
+
     private void ButtonPressed(object sender, RoutedEventArgs e)
     {
         // 一応の型チェック
@@ -72,6 +72,7 @@ public partial class MainWindow : IMainWindow
             {
                 logger.LogError(ex, "An error occurred while executing the task.");
             }
+
             _buttonState = ButtonState.NotChanged;
 
             try

@@ -11,7 +11,7 @@ public interface ITrackRepository
     /// </summary>
     /// <param name="trackCircuits"></param>
     /// <returns></returns>
-    (string, int)? GetTrackByTrackCircuits(IEnumerable<string> trackCircuits);
+    (string, int)? GetTrackByTrackCircuits(HashSet<string> trackCircuits);
 }
 
 public class TrackRepository: ITrackRepository
@@ -63,9 +63,8 @@ public class TrackRepository: ITrackRepository
         }
     }
 
-    public (string, int)? GetTrackByTrackCircuits(IEnumerable<string> trackCircuits)
+    public (string, int)? GetTrackByTrackCircuits(HashSet<string> trackCircuitSet)
     {
-        var trackCircuitsSet = trackCircuits.ToHashSet();
-        return _trackCircuitToTrack.TryGetValue(trackCircuitsSet, out (string, int) result) ? result : null;
+        return _trackCircuitToTrack.TryGetValue(trackCircuitSet, out (string, int) result) ? result : null;
     }
 }

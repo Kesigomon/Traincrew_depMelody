@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using TrainCrew;
@@ -9,14 +10,15 @@ public interface ITraincrewRepository
 {
     Task Fetch();
     TrainState GetTrainState();
-    List<string> GetTrackCircuits();
+    HashSet<string> GetTrackCircuitSet();
     GameScreen GetGameScreen();
+    List<SignalInfo> GetSignalInfos();
 }
 
 internal class CommandToTrainCrew
 {
     public string command { get; init; }
-    public string[] args  { get; init; }
+    public string[] args { get; init; }
 }
 
 [Serializable]
@@ -29,7 +31,7 @@ internal class TraincrewBaseData
 [Serializable]
 internal class TrainCrewState
 {
-    public string type  { get; init; }
+    public string type { get; init; }
     public TrainCrewStateData data { get; init; }
 }
 
@@ -55,13 +57,14 @@ internal class TrackCircuitData
 
 public class TraincrewRepository : ITraincrewRepository, IDisposable
 {
+    private const string DataRequestCommand = "DataRequest";
+    private const string _connectUri = "ws://127.0.0.1:50300/"; //TRAIN CREWのポート番号は50300
+    private static readonly string[] DataRequestArgs = ["tconlyontrain"];
+    private static readonly Encoding _encoding = Encoding.UTF8;
+
     private TrainState? _trainState;
     private ClientWebSocket _webSocket = new();
-    private const string _connectUri = "ws://127.0.0.1:50300/"; //TRAIN CREWのポート番号は50300
-    private static readonly Encoding _encoding = Encoding.UTF8;
-    private List<string> _trackCircuits = [];
-    private const string DataRequestCommand = "DataRequest";
-    private static readonly string[] DataRequestArgs = ["tconlyontrain"];
+    private HashSet<string> _trackCircuitSet = [];
 
     public TraincrewRepository()
     {
@@ -76,6 +79,7 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
 
     public async Task Fetch()
     {
+        TrainCrewInput.RequestData(DataRequest.Signal);
         _trainState = TrainCrewInput.GetTrainState();
         while (_webSocket.State != WebSocketState.Open)
         {
@@ -178,11 +182,11 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
             return;
         }
 
-        _trackCircuits = trainCrewStateData
+        _trackCircuitSet = trainCrewStateData
             .trackCircuitList
             .Where(trackCircuit => trackCircuit.Last == trainNumber)
             .Select(trackCircuit => trackCircuit.Name)
-            .ToList();
+            .ToHashSet();
     }
 
     public TrainState GetTrainState()
@@ -196,9 +200,14 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
         return _trainState;
     }
 
-    public List<string> GetTrackCircuits()
+    public HashSet<string> GetTrackCircuitSet()
     {
-        return _trackCircuits.ToList();
+        return _trackCircuitSet.ToHashSet();
+    }
+
+    public List<SignalInfo> GetSignalInfos()
+    {
+        return TrainCrewInput.signals.ToList();
     }
 
     public GameScreen GetGameScreen()

@@ -77,7 +77,7 @@ public class MainService(
     private void TickOnPlaying()
     {
         // 駅と番線取得
-        var trackCircuits = traincrewRepository.GetTrackCircuits();
+        var trackCircuits = traincrewRepository.GetTrackCircuitSet();
         var trackInfo = trackRepository.GetTrackByTrackCircuits(trackCircuits);
 
         // ホームトラック上にいればボタンを有効にする
