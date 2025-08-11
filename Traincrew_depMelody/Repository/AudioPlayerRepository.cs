@@ -106,7 +106,9 @@ public class AudioPlayerRepository : IAudioPlayerRepository
         _dispatcher.Invoke(() =>
         {
             _playerOn.Stop();
+            _playerOn.Close();
             _playerOff.Stop();
+            _playerOff.Close();
         });
     }
 }
