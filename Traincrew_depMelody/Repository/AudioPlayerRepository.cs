@@ -26,15 +26,16 @@ public class AudioPlayerRepository : IAudioPlayerRepository
         _playerOn = playerOn;
         _playerOff = playerOff;
         _dispatcher = dispatcher;
-        _playerOn.MediaEnded += (s, e) =>
+        _playerOn.MediaEnded += (s, e) => _dispatcher.Invoke(() =>
         {
-            _dispatcher.Invoke(() =>
-            {
-                _playerOn.Position = TimeSpan.Zero;
-                _playerOn.Play();
-            });
-        };
-        _playerOff.MediaEnded += (s, e) => _dispatcher.Invoke(() => _playerOff.Stop());
+            _playerOn.Position = TimeSpan.Zero;
+            _playerOn.Play();
+        });
+        _playerOff.MediaEnded += (s, e) => _dispatcher.Invoke(() =>
+        {
+            _playerOff.Stop();
+            _playerOff.Close();
+        });
     }
 
     public void PlayOn(Uri path, Action? onComplete = null)
@@ -63,6 +64,7 @@ public class AudioPlayerRepository : IAudioPlayerRepository
         _dispatcher.Invoke(() =>
         {
             _playerOn.Stop();
+            _playerOn.Close();
             _playerOff.Stop();
             if (_onCompleteOff != null)
             {
