@@ -136,7 +136,7 @@ public class AutoModeService
         _melodyDuration = await _ffmpegRepository
             .GetDuration(_melodyPathService.GetAudioPath(trackInfo, true));
         _doorClosingDuration = await _ffmpegRepository
-            .GetDuration(_melodyPathService.GetAudioPath(trackInfo, false)) + 1.0;
+            .GetDuration(_melodyPathService.GetAudioPath(trackInfo, false));
     }
 
     public void MediaEnded(object? sender, EventArgs e)
