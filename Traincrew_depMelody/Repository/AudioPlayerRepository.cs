@@ -61,7 +61,8 @@ public class AudioPlayerRepository : IAudioPlayerRepository
 
     public void PlayOff(Uri path, Action? onComplete = null, TimeSpan? duration = null)
     {
-        _dispatcher.Invoke(() =>
+        // Todo: 1秒待ち時にPauseした時、Pauseを無視してしまう
+        Task.Delay(1000).ContinueWith(_ => _dispatcher.Invoke(() =>
         {
             _playerOn.Stop();
             _playerOn.Close();
@@ -80,7 +81,7 @@ public class AudioPlayerRepository : IAudioPlayerRepository
 
             _playerOff.Open(path);
             _playerOff.Play();
-        });
+        }));
     }
 
     public void Resume()

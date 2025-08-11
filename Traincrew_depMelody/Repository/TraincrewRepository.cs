@@ -11,6 +11,7 @@ public interface ITraincrewRepository
     Task Fetch();
     TrainState GetTrainState();
     HashSet<string> GetTrackCircuitSet();
+    CrewType GetCrewType();
     GameScreen GetGameScreen();
     List<SignalInfo> GetSignalInfos();
 }
@@ -208,6 +209,11 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
     public List<SignalInfo> GetSignalInfos()
     {
         return TrainCrewInput.signals.ToList();
+    }
+
+    public CrewType GetCrewType()
+    {
+        return TrainCrewInput.gameState.crewType;
     }
 
     public GameScreen GetGameScreen()

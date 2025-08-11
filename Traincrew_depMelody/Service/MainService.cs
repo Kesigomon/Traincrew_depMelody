@@ -7,6 +7,7 @@ namespace Traincrew_depMelody.Service;
 
 public class MainService(
     IMainWindow mainWindow,
+    AutoModeService autoModeService,
     IAudioPlayerRepository audioPlayerRepository,
     ITraincrewRepository traincrewRepository,
     ITrackRepository trackRepository,
@@ -15,6 +16,7 @@ public class MainService(
 {
     private GameScreen _previousGameScreen = GameScreen.NotRunningGame;
     private bool _isMelodyPlaying;
+    private bool _isAutoMode = false;
 
     public async Task Tick()
     {
@@ -42,7 +44,7 @@ public class MainService(
 
         if (gameScreen == GameScreen.MainGame)
         {
-            TickOnPlaying();
+            await TickOnPlaying();
         }
 
 
@@ -60,7 +62,11 @@ public class MainService(
     private void OnStartGame()
     {
         _isMelodyPlaying = false;
+        autoModeService.Reset();
         audioPlayerRepository.Reset();
+        var crewType = traincrewRepository.GetCrewType();
+        // Todo: もうちょい細かい制御ができるようにしたい
+        _isAutoMode = crewType == CrewType.Driver;
     }
 
     /// <summary>
@@ -74,7 +80,7 @@ public class MainService(
     /// <summary>
     /// 乗務中(Pause以外)の場合の毎事処理
     /// </summary>
-    private void TickOnPlaying()
+    private async Task TickOnPlaying()
     {
         // 駅と番線取得
         var trackCircuits = traincrewRepository.GetTrackCircuitSet();
@@ -83,14 +89,14 @@ public class MainService(
         // ホームトラック上にいればボタンを有効にする
         // あとで: 自動モード無効時の場合のみという条件を追加
         var isOnPlatformTrack = trackInfo != null;
-        mainWindow.SetButtonIsEnabled(isOnPlatformTrack);
+        mainWindow.SetButtonIsEnabled(isOnPlatformTrack && !_isAutoMode);
         if (!isOnPlatformTrack)
         {
             return;
         }
 
         // まず、On用の処理をするべきか、Off用の処理をするべきか、そのままか判定する 
-        var buttonState = GetButtonState();
+        var buttonState = await GetButtonState();
         // Buttonを変化させてない場合
         // または、オンに変化しているが、メロディ再生中の場合
         // または、オフに変化しているが、メロディ停止中の場合
@@ -123,8 +129,12 @@ public class MainService(
     /// ON押下時の処理をするべきか、OFF押下時の処理をするべきか、そのままか判定する
     /// </summary>
     /// <returns></returns>
-    private ButtonState GetButtonState()
+    private async Task<ButtonState> GetButtonState()
     {
+        if (_isAutoMode)
+        {
+            return await autoModeService.GetButtonState();
+        }
         return mainWindow.GetButtonState();
     }
 
