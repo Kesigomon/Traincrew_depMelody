@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using Traincrew_depMelody.Enum;
+using Traincrew_depMelody.Models;
 using Traincrew_depMelody.Repository;
 using Traincrew_depMelody.Window;
-using TrainCrew;
 
 namespace Traincrew_depMelody.Service;
 
@@ -68,7 +68,7 @@ public class AutoModeService
         return result;
     }
 
-    private async Task<ButtonState> _elapse(TrainState state, (string, int)? trackInfo)
+    private async Task<ButtonState> _elapse(AppTrainState state, (string, int)? trackInfo)
     {
         var nowTime = state.NowTime;
         var nowTimeSeconds = nowTime.TotalSeconds;
@@ -102,7 +102,7 @@ public class AutoModeService
             return ButtonState.Off;
         }
 
-        var departureTime = state.stationList[state.nowStaIndex].DepTime.TotalSeconds;
+        var departureTime = state.StationList[state.NowStaIndex].DepTime.TotalSeconds;
         var pushOnSeconds = new[]
         {
             // 電車到着後2秒後

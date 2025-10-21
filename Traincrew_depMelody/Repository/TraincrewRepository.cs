@@ -3,13 +3,14 @@ using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using TrainCrew;
+using Traincrew_depMelody.Models;
 
 namespace Traincrew_depMelody.Repository;
 
 public interface ITraincrewRepository
 {
     Task Fetch();
-    TrainState GetTrainState();
+    AppTrainState GetTrainState();
     HashSet<string> GetTrackCircuitSet();
     CrewType GetCrewType();
     GameScreen GetGameScreen();
@@ -63,7 +64,7 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
     private static readonly string[] DataRequestArgs = ["tconlyontrain"];
     private static readonly Encoding _encoding = Encoding.UTF8;
 
-    private TrainState? _trainState;
+    private AppTrainState? _appTrainState;
     private ClientWebSocket _webSocket = new();
     private HashSet<string> _trackCircuitSet = [];
 
@@ -81,7 +82,9 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
     public async Task Fetch()
     {
         TrainCrewInput.RequestData(DataRequest.Signal);
-        _trainState = TrainCrewInput.GetTrainState();
+        var trainCrewState = TrainCrewInput.GetTrainState();
+        _appTrainState = AppTrainState.FromTrainCrewState(trainCrewState);
+
         while (_webSocket.State != WebSocketState.Open)
         {
             try
@@ -104,7 +107,7 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
         if (GetGameScreen() == GameScreen.MainGame && _webSocket.State == WebSocketState.Open)
         {
             await SendMessages();
-            await ReceiveMessages(_trainState.diaName);
+            await ReceiveMessages(_appTrainState.DiaName);
         }
     }
 
@@ -190,15 +193,15 @@ public class TraincrewRepository : ITraincrewRepository, IDisposable
             .ToHashSet();
     }
 
-    public TrainState GetTrainState()
+    public AppTrainState GetTrainState()
     {
-        if (_trainState == null)
+        if (_appTrainState == null)
         {
             throw new NullReferenceException(
                 "Train crew state is null. Did you forget to call TrainCrewRepository.Fetch()?");
         }
 
-        return _trainState;
+        return _appTrainState;
     }
 
     public HashSet<string> GetTrackCircuitSet()

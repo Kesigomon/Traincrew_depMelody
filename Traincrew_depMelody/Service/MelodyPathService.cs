@@ -1,3 +1,4 @@
+using Traincrew_depMelody.Models;
 using Traincrew_depMelody.Repository;
 
 namespace Traincrew_depMelody.Service;

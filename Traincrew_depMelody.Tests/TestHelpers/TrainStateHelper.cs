@@ -1,10 +1,33 @@
 using System.IO;
 using System.Reflection;
+using Traincrew_depMelody.Models;
 
 namespace Traincrew_depMelody.Tests.TestHelpers;
 
 public static class TrainStateHelper
 {
+    /// <summary>
+    /// テスト用のAppTrainStateを作成（推奨）
+    /// </summary>
+    public static AppTrainState CreateAppTrainState(string trainClass = "")
+    {
+        return new AppTrainState
+        {
+            Class = trainClass,
+            AllClose = true,
+            NowTime = TimeSpan.Zero,
+            CarStates = new List<AppCarState>(),
+            StationList = new List<AppStationInfo>(),
+            NowStaIndex = 0,
+            DiaName = string.Empty,
+            NextStaName = string.Empty
+        };
+    }
+
+    /// <summary>
+    /// リフレクションでTrainCrewInput.TrainStateを作成（レガシー、非推奨）
+    /// </summary>
+    [Obsolete("Use CreateAppTrainState instead")]
     public static object CreateTrainState(string trainClass)
     {
         // TrainCrewInput.dll を動的に読み込んで TrainState を作成
