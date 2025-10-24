@@ -1,0 +1,147 @@
+using Microsoft.Extensions.Logging;
+using Traincrew_depMelody.Domain.Interfaces.Repositories;
+using Traincrew_depMelody.Domain.Models;
+
+namespace Traincrew_depMelody.Infrastructure.Repositories;
+
+public class TrackRepository : ITrackRepository
+{
+    private readonly AppConfiguration _config;
+    private readonly ILogger<TrackRepository> _logger;
+    private List<TrackInfo> _tracks = new List<TrackInfo>();
+    private readonly object _cacheLock = new object();
+
+    public TrackRepository(AppConfiguration config, ILogger<TrackRepository> logger)
+    {
+        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    /// <summary>
+    /// 全ての駅・番線情報を取得
+    /// </summary>
+    public async Task<IEnumerable<TrackInfo>> GetAllTracksAsync()
+    {
+        await EnsureLoadedAsync();
+
+        lock (_cacheLock)
+        {
+            return _tracks.ToList();
+        }
+    }
+
+    /// <summary>
+    /// 軌道回路IDから駅・番線情報を検索
+    /// </summary>
+    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(string circuitId)
+    {
+        await EnsureLoadedAsync();
+
+        lock (_cacheLock)
+        {
+            return _tracks.FirstOrDefault(t => t.ContainsCircuit(circuitId));
+        }
+    }
+
+    /// <summary>
+    /// 駅名と番線から駅・番線情報を検索
+    /// </summary>
+    public async Task<TrackInfo?> FindTrackByStationAndNumberAsync(string stationName, string trackNumber)
+    {
+        await EnsureLoadedAsync();
+
+        lock (_cacheLock)
+        {
+            return _tracks.FirstOrDefault(t =>
+                t.StationName == stationName && t.TrackNumber == trackNumber);
+        }
+    }
+
+    /// <summary>
+    /// CSVを再読み込み
+    /// </summary>
+    public async Task ReloadAsync()
+    {
+        _logger.LogInformation("stations.csvを再読み込み");
+        await LoadCsvAsync();
+    }
+
+    /// <summary>
+    /// 初回読み込み確認
+    /// </summary>
+    private async Task EnsureLoadedAsync()
+    {
+        lock (_cacheLock)
+        {
+            if (_tracks.Count > 0) return;
+        }
+
+        await LoadCsvAsync();
+    }
+
+    /// <summary>
+    /// CSVファイルを読み込み
+    /// </summary>
+    private async Task LoadCsvAsync()
+    {
+        string csvPath = _config.StationsCsvPath;
+
+        if (!File.Exists(csvPath))
+        {
+            _logger.LogError($"stations.csvが見つかりません: {csvPath}");
+            throw new FileNotFoundException("stations.csvが見つかりません", csvPath);
+        }
+
+        var tracks = new List<TrackInfo>();
+
+        try
+        {
+            using var reader = new StreamReader(csvPath, System.Text.Encoding.UTF8);
+
+            // ヘッダー行をスキップ
+            await reader.ReadLineAsync();
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var values = line.Split(',');
+
+                if (values.Length < 3)
+                {
+                    _logger.LogWarning($"不正なCSV行をスキップ: {line}");
+                    continue;
+                }
+
+                string stationName = values[0].Trim();
+                string trackNumber = values[1].Trim();
+
+                var circuits = new List<string>();
+                for (int i = 2; i < values.Length; i++)
+                {
+                    string circuit = values[i].Trim();
+                    if (!string.IsNullOrEmpty(circuit))
+                    {
+                        circuits.Add(circuit);
+                    }
+                }
+
+                var trackInfo = new TrackInfo(stationName, trackNumber, circuits);
+                tracks.Add(trackInfo);
+            }
+
+            lock (_cacheLock)
+            {
+                _tracks = tracks;
+            }
+
+            _logger.LogInformation($"stations.csvを読み込みました: {tracks.Count}件");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "stations.csv読み込み中にエラーが発生");
+            throw;
+        }
+    }
+}

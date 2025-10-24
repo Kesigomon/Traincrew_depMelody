@@ -1,0 +1,30 @@
+<Window x:Class="Traincrew_depMelody.Presentation.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Traincrew depMelody" Height="700" Width="350"
+        ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ONボタン -->
+        <Button x:Name="OnButton"
+                Grid.Row="0"
+                Content="ON"
+                FontSize="72"
+                Background="Black"
+                Foreground="White"
+                Click="OnButton_Click"/>
+
+        <!-- OFFボタン -->
+        <Button x:Name="OffButton"
+                Grid.Row="1"
+                Content="OFF"
+                FontSize="72"
+                Background="Red"
+                Foreground="White"
+                Click="OffButton_Click"/>
+    </Grid>
+</Window>

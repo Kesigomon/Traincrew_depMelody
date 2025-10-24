@@ -1,0 +1,7 @@
+駅名,番線,メロディーファイルパス,ドア閉め案内ファイルパス(下り),ドア閉め案内ファイルパス(上り)
+館浜,1,.\Audio\Melody\tatehama_1.mp3,.\Audio\Announcement\announcement1d.mp3,.\Audio\Announcement\announcement1u.mp3
+館浜,2,.\Audio\Melody\tatehama_2.mp3,.\Audio\Announcement\announcement2d.mp3,.\Audio\Announcement\announcement2u.mp3
+海浜幕張,1,.\Audio\Melody\kaihinmakuhari.mp3,.\Audio\Announcement\announcement1d.mp3,.\Audio\Announcement\announcement1u.mp3
+海浜幕張,2,.\Audio\Melody\kaihinmakuhari.mp3,.\Audio\Announcement\announcement2d.mp3,.\Audio\Announcement\announcement2u.mp3
+稲毛海岸,1,.\Audio\Melody\inagekaigan.mp3,,
+稲毛海岸,2,.\Audio\Melody\inagekaigan.mp3,,
