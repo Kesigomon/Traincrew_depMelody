@@ -1,51 +1,78 @@
 using Microsoft.Extensions.Logging;
 using System.Net.WebSockets;
-using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.Json;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
+using TrainCrew;
+using DomainGameState = Traincrew_depMelody.Domain.Models.GameState;
+using DomainGameScreen = Traincrew_depMelody.Domain.Models.GameScreen;
+using DomainCrewType = Traincrew_depMelody.Domain.Models.CrewType;
+using DomainTrainState = Traincrew_depMelody.Domain.Models.TrainState;
+using DomainSignalInfo = Traincrew_depMelody.Domain.Models.SignalInfo;
 
 namespace Traincrew_depMelody.Infrastructure.ExternalServices;
 
+[Serializable]
+internal class CommandToTrainCrew
+{
+    public string command { get; init; }
+    public string[] args { get; init; }
+}
+
+[Serializable]
+internal class TraincrewBaseData
+{
+    public string type { get; init; }
+    public object data { get; init; }
+}
+
+[Serializable]
+internal class TrainCrewState
+{
+    public string type { get; init; }
+    public TrainCrewStateData data { get; init; }
+}
+
+[Serializable]
+internal class TrainCrewStateData
+{
+    public List<TrackCircuitData> trackCircuitList { get; init; } = [];
+}
+
+[Serializable]
+internal class TrackCircuitData
+{
+    public bool On { get; set; } = false;
+    public bool Lock { get; set; } = false;
+    public string Last { get; set; } = null;
+    public string Name { get; set; } = "";
+
+    public override string ToString()
+    {
+        return $"{Name}";
+    }
+}
+
 public class TraincrewGameService : ITraincrewGameService, IDisposable
 {
+    private const string DataRequestCommand = "DataRequest";
+    private const string ConnectUri = "ws://127.0.0.1:50300/";
+    private static readonly string[] DataRequestArgs = ["tconlyontrain"];
+    private static readonly Encoding Encoding = Encoding.UTF8;
+
     private readonly AppConfiguration _config;
     private readonly ILogger<TraincrewGameService> _logger;
 
-    private ClientWebSocket? _webSocket;
     private bool _isConnected;
-    private CancellationTokenSource? _cts;
+    private string _trainNumber = string.Empty;
+    private ClientWebSocket _webSocket = new();
+    private List<string> _trackCircuits = [];
+    private readonly SemaphoreSlim _fetchDataSemaphore = new(1, 1);
 
     public bool IsConnected => _isConnected;
 
-    public event EventHandler<GameState>? GameStateChanged;
-
-    // TrainCrewInput.dll のメソッド定義(P/Invoke)
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int GetGameScreen();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool IsPaused();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int GetCrewType();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern double GetTrainSpeed();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool IsDoorsOpen();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern IntPtr GetTrainNumber();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-    private static extern IntPtr GetVehicleType();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int GetDepartureTime();
-
-    [DllImport("TrainCrewInput.dll", CallingConvention = CallingConvention.Cdecl)]
-    private static extern int GetSignalAspect();
+    public event EventHandler<DomainGameState>? GameStateChanged;
 
     public TraincrewGameService(AppConfiguration config, ILogger<TraincrewGameService> logger)
     {
@@ -56,105 +83,73 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
     /// <summary>
     /// ゲームに接続
     /// </summary>
-    public async Task ConnectAsync()
+    public Task ConnectAsync()
     {
-        if (_isConnected)
-        {
-            _logger.LogWarning("既に接続済みです");
-            return;
-        }
-
-        try
-        {
-            _webSocket = new ClientWebSocket();
-            _cts = new CancellationTokenSource();
-
-            string uri = $"ws://localhost:{_config.WebSocketPort}";
-            await _webSocket.ConnectAsync(new Uri(uri), _cts.Token);
-
-            _isConnected = true;
-            _logger.LogInformation("Traincrewゲームに接続しました");
-
-            // 受信ループを開始
-            _ = Task.Run(() => ReceiveLoopAsync(_cts.Token));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Traincrewゲームへの接続に失敗");
-            throw;
-        }
+        TrainCrewInput.Init();
+        _isConnected = true;
+        _logger.LogInformation("Traincrewゲームに接続しました");
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// ゲームから切断
     /// </summary>
-    public async Task DisconnectAsync()
+    public Task DisconnectAsync()
     {
-        if (!_isConnected) return;
-
-        _cts?.Cancel();
-
-        if (_webSocket != null)
-        {
-            await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
-            _webSocket.Dispose();
-            _webSocket = null;
-        }
-
+        TrainCrewInput.Dispose();
         _isConnected = false;
         _logger.LogInformation("Traincrewゲームから切断しました");
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// 現在のゲーム状態を取得
     /// </summary>
-    public async Task<GameState> GetCurrentGameStateAsync()
+    public async Task<DomainGameState> GetCurrentGameStateAsync()
     {
+        // データ取得を実行
+        await FetchDataAsync();
+
         try
         {
             // TrainCrewInput.dllから情報を取得
-            var screen = (GameScreen)GetGameScreen();
-            bool isPaused = IsPaused();
-            var crewType = (CrewType)GetCrewType();
+            TrainCrewInput.RequestData(DataRequest.Signal);
+            var trainState = TrainCrewInput.GetTrainState();
+            var gameScreen = TrainCrewInput.gameState.gameScreen;
 
             // TrainState構築
-            double speed = GetTrainSpeed();
-            bool isDoorsOpen = IsDoorsOpen();
-            string? trainNumber = Marshal.PtrToStringAnsi(GetTrainNumber());
-            string? vehicleType = Marshal.PtrToStringAnsi(GetVehicleType());
-            int departureTimeUnix = GetDepartureTime();
-            DateTime? departureTime = departureTimeUnix > 0 ? DateTimeOffset.FromUnixTimeSeconds(departureTimeUnix).DateTime : null;
-
-            var trainState = new TrainState
+            var trainStateModel = new DomainTrainState
             {
-                Speed = speed,
-                IsDoorsOpen = isDoorsOpen,
-                TrainNumber = trainNumber,
-                VehicleType = vehicleType,
-                DepartureTime = departureTime,
-                ArrivalTime = null // TODO: 実装
+                Speed = trainState.Speed,
+                IsDoorsOpen = !trainState.AllClose,
+                TrainNumber = trainState.diaName,
+                VehicleType = null, // TODO: 実装 (modelNameはプロパティに存在しない)
+                DepartureTime = null, // TODO: 実装
+                ArrivalTime = null
             };
 
             // SignalInfo構築
-            int signalAspectValue = GetSignalAspect();
-            var signalAspect = signalAspectValue == 0 ? SignalAspect.Stop : SignalAspect.Proceed;
-            var signalInfo = new SignalInfo
+            var signalInfo = new DomainSignalInfo
             {
-                Aspect = signalAspect,
-                OpenedAt = null // TODO: 状態遷移検知が必要
+                Aspect = SignalAspect.Proceed, // TODO: 実装
+                OpenedAt = null
             };
 
-            // WebSocketから軌道回路情報を取得(簡略化)
-            string? currentCircuitId = await GetCurrentCircuitIdAsync();
+            // 軌道回路情報を取得
+            string? currentCircuitId = _trackCircuits.FirstOrDefault();
+            bool isAtStation = _trackCircuits.Any();
 
-            bool isAtStation = !string.IsNullOrEmpty(currentCircuitId); // 簡易判定
-
-            return new GameState
+            return new DomainGameState
             {
-                Screen = screen,
-                IsPaused = isPaused,
-                CrewType = crewType,
-                TrainState = trainState,
+                Screen = gameScreen switch
+                {
+                    TrainCrew.GameScreen.MainGame => DomainGameScreen.Driving,
+                    TrainCrew.GameScreen.MainGame_Pause => DomainGameScreen.Driving,
+                    _ => DomainGameScreen.Other
+                },
+                IsPaused = gameScreen == TrainCrew.GameScreen.MainGame_Pause,
+                CrewType = DomainCrewType.None, // TODO: 実装
+                TrainState = trainStateModel,
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
                 IsAtStation = isAtStation,
@@ -164,12 +159,11 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "ゲーム状態取得中にエラーが発生");
-            // デフォルト値を返す
-            return new GameState
+            return new DomainGameState
             {
-                Screen = GameScreen.Other,
+                Screen = DomainGameScreen.Other,
                 IsPaused = false,
-                CrewType = CrewType.None,
+                CrewType = DomainCrewType.None,
                 CurrentGameTime = DateTime.Now,
                 IsAtStation = false
             };
@@ -177,61 +171,156 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
     }
 
     /// <summary>
-    /// WebSocketから軌道回路IDを取得
+    /// データ取得処理
     /// </summary>
-    private async Task<string?> GetCurrentCircuitIdAsync()
+    private async Task FetchDataAsync()
     {
-        // TODO: 実際のWebSocket通信実装
-        // 軌道回路情報を取得する処理を実装
-        await Task.CompletedTask;
-        return null; // プレースホルダー
-    }
-
-    /// <summary>
-    /// WebSocket受信ループ
-    /// </summary>
-    private async Task ReceiveLoopAsync(CancellationToken cancellationToken)
-    {
-        var buffer = new byte[1024 * 4];
+        // 既に実行中の場合は待たずに即座にreturn
+        if (!await _fetchDataSemaphore.WaitAsync(0))
+        {
+            return;
+        }
 
         try
         {
-            while (!cancellationToken.IsCancellationRequested && _webSocket != null)
+            TrainCrewInput.RequestData(DataRequest.Signal);
+            var trainState = TrainCrewInput.GetTrainState();
+            _trainNumber = trainState.diaName;
+
+            if (TrainCrewInput.gameState.gameScreen
+                is not (TrainCrew.GameScreen.MainGame or TrainCrew.GameScreen.MainGame_Pause))
             {
-                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                return;
+            }
 
-                if (result.MessageType == WebSocketMessageType.Close)
+            while (_webSocket.State != WebSocketState.Open)
+            {
+                try
                 {
-                    break;
+                    await _webSocket.ConnectAsync(new(ConnectUri), CancellationToken.None);
                 }
+                catch (WebSocketException)
+                {
+                    _webSocket.Dispose();
+                    _webSocket = new();
+                    return;
+                }
+                catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException)
+                {
+                    _webSocket.Dispose();
+                    _webSocket = new();
+                }
+            }
 
-                // メッセージを処理
-                string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-                ProcessWebSocketMessage(message);
+            if (IsGameRunning() && _webSocket.State == WebSocketState.Open)
+            {
+                await SendMessagesAsync();
+                await ReceiveMessagesAsync(_trainNumber);
             }
         }
-        catch (OperationCanceledException)
+        finally
         {
-            // 正常なキャンセル
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "WebSocket受信中にエラーが発生");
+            _fetchDataSemaphore.Release();
         }
     }
 
     /// <summary>
-    /// WebSocketメッセージを処理
+    /// WebSocketでメッセージを送信
     /// </summary>
-    private void ProcessWebSocketMessage(string message)
+    private async Task SendMessagesAsync()
     {
-        // TODO: JSONパース等の実装
-        _logger.LogTrace($"WebSocketメッセージ受信: {message}");
+        CommandToTrainCrew requestCommand = new()
+        {
+            command = DataRequestCommand,
+            args = DataRequestArgs
+        };
+
+        var json = JsonSerializer.Serialize(requestCommand);
+        var bytes = Encoding.GetBytes(json);
+
+        try
+        {
+            await _webSocket.SendAsync(new(bytes), WebSocketMessageType.Text, true,
+                CancellationToken.None);
+        }
+        catch (WebSocketException)
+        {
+            _webSocket.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// WebSocketでメッセージを受信
+    /// </summary>
+    private async Task ReceiveMessagesAsync(string trainNumber)
+    {
+        var buffer = new byte[2048];
+
+        if (_webSocket.State != WebSocketState.Open)
+        {
+            return;
+        }
+
+        List<byte> messageBytes = [];
+        WebSocketReceiveResult result;
+        do
+        {
+            result = await _webSocket.ReceiveAsync(new(buffer), CancellationToken.None);
+
+            if (result.MessageType == WebSocketMessageType.Close)
+            {
+                return;
+            }
+
+            messageBytes.AddRange(buffer.Take(result.Count));
+        } while (!result.EndOfMessage);
+
+        var jsonResponse = Encoding.GetString(messageBytes.ToArray());
+        messageBytes.Clear();
+
+        var traincrewBaseData = JsonSerializer.Deserialize<TraincrewBaseData>(jsonResponse);
+
+        if (traincrewBaseData == null)
+        {
+            return;
+        }
+
+        if (traincrewBaseData.type != "TrainCrewStateData")
+        {
+            return;
+        }
+
+        var dataJsonElement = (JsonElement)traincrewBaseData.data;
+        var trainCrewStateData = JsonSerializer.Deserialize<TrainCrewStateData>(dataJsonElement.GetRawText());
+
+        if (trainCrewStateData == null)
+        {
+            return;
+        }
+
+        _trackCircuits = trainCrewStateData
+            .trackCircuitList
+            .Where(trackCircuit => trackCircuit.Last == trainNumber)
+            .Select(trackCircuit => trackCircuit.Name)
+            .ToList();
+    }
+
+    /// <summary>
+    /// ゲームステータスを取得
+    /// </summary>
+    private bool IsGameRunning()
+    {
+        return TrainCrewInput.gameState.gameScreen switch
+        {
+            TrainCrew.GameScreen.MainGame => true,
+            _ => false
+        };
     }
 
     public void Dispose()
     {
-        DisconnectAsync().Wait();
-        _cts?.Dispose();
+        TrainCrewInput.Dispose();
+        _webSocket.Dispose();
+        _fetchDataSemaphore.Dispose();
     }
 }
