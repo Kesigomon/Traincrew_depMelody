@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -16,9 +18,20 @@ public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
 
+    [DllImport("kernel32.dll")]
+    private static extern bool AttachConsole(int dwProcessId);
+
+    private const int AttachParentProcess = -1;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+#if DEBUG
+        // デバッグ時：親プロセス（Visual Studio）のコンソールにアタッチ
+        AttachConsole(AttachParentProcess);
+        Console.OutputEncoding = Encoding.UTF8;
+#endif
 
         var services = new ServiceCollection();
         ConfigureServices(services);
