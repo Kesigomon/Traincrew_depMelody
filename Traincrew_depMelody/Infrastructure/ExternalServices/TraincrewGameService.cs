@@ -5,6 +5,7 @@ using System.Text.Json;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
 using TrainCrew;
+using CrewType = TrainCrew.CrewType;
 using DomainGameState = Traincrew_depMelody.Domain.Models.GameState;
 using DomainGameScreen = Traincrew_depMelody.Domain.Models.GameScreen;
 using DomainCrewType = Traincrew_depMelody.Domain.Models.CrewType;
@@ -117,6 +118,20 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             var trainState = TrainCrewInput.GetTrainState();
             var gameScreen = TrainCrewInput.gameState.gameScreen;
 
+            var currentGameTime = trainState.NowTime; // Timespan型
+
+            var crewType = DomainCrewType.None;
+            if (gameScreen is TrainCrew.GameScreen.MainGame or TrainCrew.GameScreen.MainGame_Pause)
+            {
+                crewType = (TrainCrewInput.gameState.crewType) switch
+                {
+                    CrewType.Driver => DomainCrewType.Driver,
+                    CrewType.Conductor => DomainCrewType.Conductor,
+                    _ => DomainCrewType.None
+                };
+            }
+
+
             // TrainState構築
             var trainStateModel = new DomainTrainState
             {
@@ -128,10 +143,13 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 ArrivalTime = null
             };
 
+            var signalAspect = TrainCrewInput.signals.Any(s => s.phase != "R")
+                ? SignalAspect.Proceed
+                : SignalAspect.Stop;
             // SignalInfo構築
             var signalInfo = new DomainSignalInfo
             {
-                Aspect = SignalAspect.Proceed, // TODO: 実装
+                Aspect = signalAspect,
                 OpenedAt = null
             };
 
@@ -148,7 +166,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                     _ => DomainGameScreen.Other
                 },
                 IsPaused = gameScreen == TrainCrew.GameScreen.MainGame_Pause,
-                CrewType = DomainCrewType.None, // TODO: 実装
+                CrewType = crewType, 
                 TrainState = trainStateModel,
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
