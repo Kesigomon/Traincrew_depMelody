@@ -14,6 +14,8 @@ public partial class MainWindow : Window
     private readonly ILogger<MainWindow> _logger;
     private readonly IMelodyControlService _melodyControl;
 
+    private GameState _currentGameState = new();
+
     public MainWindow(
         IMelodyControlService melodyControl,
         IAutoModeService autoMode,
@@ -31,6 +33,7 @@ public partial class MainWindow : Window
         Closing += OnClosing;
 
         _melodyControl.StateChanged += OnMelodyStateChanged;
+        _gameService.GameStateChanged += OnGameStateChanged;
     }
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -84,8 +87,31 @@ public partial class MainWindow : Window
         // UIスレッドで更新
         Dispatcher.Invoke(() =>
         {
-            OnButton.IsEnabled = !state.IsPlaying && !_autoMode.IsEnabled;
-            OffButton.IsEnabled = state.IsPlaying && !_autoMode.IsEnabled;
+            UpdateButtonStates();
         });
+    }
+
+    private void OnGameStateChanged(object? sender, GameState state)
+    {
+        _currentGameState = state;
+        // UIスレッドで更新
+        Dispatcher.Invoke(() =>
+        {
+            UpdateButtonStates();
+        });
+    }
+
+    private void UpdateButtonStates()
+    {
+        // ボタン有効化条件:
+        // 1. プレイ中 (GameScreen.Playing)
+        // 2. 駅に在線している
+        // 3. 自動モードオフ
+        var shouldEnable = _currentGameState.Screen == GameScreen.Playing
+                           && _currentGameState.IsAtStation
+                           && !_autoMode.IsEnabled;
+
+        OnButton.IsEnabled = shouldEnable;
+        OffButton.IsEnabled = shouldEnable;
     }
 }

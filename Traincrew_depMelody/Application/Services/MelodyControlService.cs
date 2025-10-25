@@ -168,7 +168,7 @@ public class MelodyControlService : IMelodyControlService
     public async Task<bool> IsUiEnabledAsync()
     {
         var gameState = await _gameService.GetCurrentGameStateAsync();
-        return gameState.IsAtStation && !gameState.IsPaused;
+        return gameState.IsAtStation && gameState.Screen == GameScreen.Playing;
     }
 
     /// <summary>
@@ -177,7 +177,7 @@ public class MelodyControlService : IMelodyControlService
     private void OnGameStateChanged(object? sender, GameState gameState)
     {
         // 一時停止状態の処理
-        if (gameState.IsPaused)
+        if (gameState.Screen == GameScreen.Pausing)
             _audioPlayback.PauseAll();
         else
             _audioPlayback.ResumeAll();

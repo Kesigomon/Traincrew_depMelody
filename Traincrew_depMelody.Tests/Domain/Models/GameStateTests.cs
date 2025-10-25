@@ -6,42 +6,42 @@ namespace Traincrew_depMelody.Tests.Domain.Models;
 public class GameStateTests
 {
     [Fact]
-    public void IsPlaying_DrivingScreen_ReturnsTrue()
+    public void Screen_Playing_WhenPlaying()
     {
         // Arrange
         var gameState = new GameState
         {
-            Screen = GameScreen.Driving
+            Screen = GameScreen.Playing
         };
 
         // Act & Assert
-        gameState.IsPlaying.Should().BeTrue();
+        gameState.Screen.Should().Be(GameScreen.Playing);
     }
 
     [Fact]
-    public void IsPlaying_ConductingScreen_ReturnsTrue()
+    public void Screen_Pausing_WhenPaused()
     {
         // Arrange
         var gameState = new GameState
         {
-            Screen = GameScreen.Conducting
+            Screen = GameScreen.Pausing
         };
 
         // Act & Assert
-        gameState.IsPlaying.Should().BeTrue();
+        gameState.Screen.Should().Be(GameScreen.Pausing);
     }
 
     [Fact]
-    public void IsPlaying_MenuScreen_ReturnsFalse()
+    public void Screen_NotPlaying_WhenNotPlaying()
     {
         // Arrange
         var gameState = new GameState
         {
-            Screen = GameScreen.Menu
+            Screen = GameScreen.NotPlaying
         };
 
         // Act & Assert
-        gameState.IsPlaying.Should().BeFalse();
+        gameState.Screen.Should().Be(GameScreen.NotPlaying);
     }
 
     [Fact]

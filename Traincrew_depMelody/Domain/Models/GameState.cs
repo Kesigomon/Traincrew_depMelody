@@ -11,11 +11,6 @@ public class GameState
     public GameScreen Screen { get; init; }
 
     /// <summary>
-    ///     一時停止中かどうか
-    /// </summary>
-    public bool IsPaused { get; init; }
-
-    /// <summary>
     ///     乗務員種別
     /// </summary>
     public CrewType CrewType { get; init; }
@@ -41,11 +36,6 @@ public class GameState
     public TimeSpan CurrentGameTime { get; init; }
 
     /// <summary>
-    ///     プレイ中かどうか
-    /// </summary>
-    public bool IsPlaying => Screen == GameScreen.Driving || Screen == GameScreen.Conducting;
-
-    /// <summary>
     ///     駅に在線しているかどうか(軌道回路が駅ホームトラックか)
     /// </summary>
     public bool IsAtStation { get; init; }
@@ -56,10 +46,12 @@ public class GameState
 /// </summary>
 public enum GameScreen
 {
-    Menu,
-    Driving,
-    Conducting,
-    Other
+    /// <summary>非プレイ中（メニュー、その他画面）</summary>
+    NotPlaying,
+    /// <summary>プレイ中（運転士/車掌モード）</summary>
+    Playing,
+    /// <summary>一時停止中</summary>
+    Pausing
 }
 
 /// <summary>

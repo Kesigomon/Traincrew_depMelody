@@ -123,8 +123,8 @@ public class AutoModeService : IAutoModeService
             // 運転士モード時のみ自動モード有効
             if (gameState.CrewType != CrewType.Driver) return;
 
-            // 一時停止中は何もしない
-            if (gameState.IsPaused) return;
+            // プレイ中以外は何もしない
+            if (gameState.Screen != GameScreen.Playing) return;
 
             // 駅に在線していない場合はリセット
             if (!gameState.IsAtStation)

@@ -166,11 +166,10 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             {
                 Screen = gameScreen switch
                 {
-                    GameScreen.MainGame => DomainGameScreen.Driving,
-                    GameScreen.MainGame_Pause => DomainGameScreen.Driving,
-                    _ => DomainGameScreen.Other
+                    GameScreen.MainGame => DomainGameScreen.Playing,
+                    GameScreen.MainGame_Pause => DomainGameScreen.Pausing,
+                    _ => DomainGameScreen.NotPlaying
                 },
-                IsPaused = gameScreen == GameScreen.MainGame_Pause,
                 CrewType = crewType,
                 TrainState = trainStateModel,
                 SignalInfo = signalInfo,
@@ -184,8 +183,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             _logger.LogError(ex, "ゲーム状態取得中にエラーが発生");
             return new()
             {
-                Screen = DomainGameScreen.Other,
-                IsPaused = false,
+                Screen = DomainGameScreen.NotPlaying,
                 CrewType = DomainCrewType.None,
                 CurrentGameTime = TimeSpan.Zero,
                 IsAtStation = false
