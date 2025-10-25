@@ -139,7 +139,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 Speed = trainState.Speed,
                 IsDoorsOpen = !trainState.AllClose,
                 TrainNumber = trainState.diaName,
-                VehicleType = null, // TrainCrewには車両型式の情報がない
+                VehicleTypes = new List<string>(), // TrainCrewには車両型式の情報がない
                 DepartureTime = null, // TrainCrewには発車時刻の情報がない
             };
 

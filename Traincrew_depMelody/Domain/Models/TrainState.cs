@@ -21,9 +21,9 @@ public class TrainState
     public string? TrainNumber { get; init; }
 
     /// <summary>
-    /// 車両形式(例: "50000")
+    /// 車両形式のリスト(例: ["50000", "50100"])
     /// </summary>
-    public string? VehicleType { get; init; }
+    public List<string> VehicleTypes { get; init; } = new();
 
     /// <summary>
     /// 発車時刻(ダイヤ上の予定時刻、ゲーム内時刻)
@@ -56,6 +56,6 @@ public class TrainState
     /// </summary>
     public bool IsLimitedExpressType()
     {
-        return VehicleType?.StartsWith("50000") ?? false;
+        return VehicleTypes.Any(vt => vt.StartsWith("50000"));
     }
 }
