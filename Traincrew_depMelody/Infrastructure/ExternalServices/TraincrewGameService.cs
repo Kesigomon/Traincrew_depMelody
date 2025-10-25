@@ -124,7 +124,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             var crewType = DomainCrewType.None;
             if (gameScreen is TrainCrew.GameScreen.MainGame or TrainCrew.GameScreen.MainGame_Pause)
             {
-                crewType = (TrainCrewInput.gameState.crewType) switch
+                crewType = TrainCrewInput.gameState.crewType switch
                 {
                     CrewType.Driver => DomainCrewType.Driver,
                     CrewType.Conductor => DomainCrewType.Conductor,
@@ -139,7 +139,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 Speed = trainState.Speed,
                 IsDoorsOpen = !trainState.AllClose,
                 TrainNumber = trainState.diaName,
-                VehicleTypes = new List<string>(), // TrainCrewには車両型式の情報がない
+                VehicleTypes = trainState.CarStates.Select(c => c.CarModel).ToList(),
                 DepartureTime = null, // TrainCrewには発車時刻の情報がない
             };
 
