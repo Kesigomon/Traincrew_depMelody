@@ -60,11 +60,11 @@ public class MelodyControlService : IMelodyControlService
         var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
         if (track == null)
         {
-            _logger.LogWarning($"軌道回路ID '{gameState.CurrentCircuitId}' に対応する駅・番線が見つかりません");
+            _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", gameState.CurrentCircuitId);
             return;
         }
 
-        _logger.LogInformation($"メロディー再生開始: {track.StationName} {track.TrackNumber}番線");
+        _logger.LogInformation("メロディー再生開始: {TrackStationName} {TrackTrackNumber}番線", track.StationName, track.TrackNumber);
 
         // メロディー再生
         await _audioPlayback.PlayMelodyAsync(track);
@@ -107,7 +107,7 @@ public class MelodyControlService : IMelodyControlService
             return;
         }
 
-        _logger.LogInformation($"メロディー停止: {track.StationName} {track.TrackNumber}番線");
+        _logger.LogInformation("メロディー停止: {TrackStationName} {TrackTrackNumber}番線", track.StationName, track.TrackNumber);
 
         // メロディー停止
         _audioPlayback.StopMelody();
@@ -139,7 +139,7 @@ public class MelodyControlService : IMelodyControlService
         gameState = await _gameService.GetCurrentGameStateAsync();
         var isInbound = gameState.TrainState?.IsInbound() ?? false;
 
-        _logger.LogInformation($"ドア閉め案内再生: {track.TrackNumber}番線 ({(isInbound ? "上り" : "下り")})");
+        _logger.LogInformation("ドア閉め案内再生: {TrackTrackNumber}番線 ({上り})", track.TrackNumber, isInbound ? "上り" : "下り");
         await _audioPlayback.PlayDoorCloseAnnouncementAsync(track, isInbound);
 
         // 案内再生済みフラグ

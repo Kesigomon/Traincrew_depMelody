@@ -213,7 +213,7 @@ public class AutoModeService : IAutoModeService
                 if (now >= targetTime)
                 {
                     shouldStart = true;
-                    _logger.LogDebug($"条件3満たす: 発車時刻ベース (発車予定: {trainState.DepartureTime})");
+                    _logger.LogDebug("条件3満たす: 発車時刻ベース (発車予定: {TrainStateDepartureTime})", trainState.DepartureTime);
                 }
             }
         }
@@ -260,7 +260,7 @@ public class AutoModeService : IAutoModeService
             if (now >= targetTime)
             {
                 shouldStop = true;
-                _logger.LogDebug($"条件3満たす: 発車時刻ベース停止 (発車予定: {trainState.DepartureTime})");
+                _logger.LogDebug("条件3満たす: 発車時刻ベース停止 (発車予定: {TrainStateDepartureTime})", trainState.DepartureTime);
             }
         }
 

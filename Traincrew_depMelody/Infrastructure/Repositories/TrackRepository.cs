@@ -89,7 +89,7 @@ public class TrackRepository : ITrackRepository
 
         if (!File.Exists(csvPath))
         {
-            _logger.LogError($"stations.csvが見つかりません: {csvPath}");
+            _logger.LogError("stations.csvが見つかりません: {CsvPath}", csvPath);
             throw new FileNotFoundException("stations.csvが見つかりません", csvPath);
         }
 
@@ -111,7 +111,7 @@ public class TrackRepository : ITrackRepository
 
                 if (values.Length < 3)
                 {
-                    _logger.LogWarning($"不正なCSV行をスキップ: {line}");
+                    _logger.LogWarning("不正なCSV行をスキップ: {Line}", line);
                     continue;
                 }
 
@@ -134,7 +134,7 @@ public class TrackRepository : ITrackRepository
                 _tracks = tracks;
             }
 
-            _logger.LogInformation($"stations.csvを読み込みました: {tracks.Count}件");
+            _logger.LogInformation("stations.csvを読み込みました: {TracksCount}件", tracks.Count);
         }
         catch (Exception ex)
         {

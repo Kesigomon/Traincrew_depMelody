@@ -33,7 +33,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     {
         if (!File.Exists(filePath))
         {
-            _logger.LogError($"音声ファイルが見つかりません: {filePath}");
+            _logger.LogError("音声ファイルが見つかりません: {FilePath}", filePath);
             throw new FileNotFoundException("音声ファイルが見つかりません", filePath);
         }
 
@@ -44,7 +44,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
         _player.Play();
 
         IsPlaying = true;
-        _logger.LogDebug($"ループ再生開始: {filePath}");
+        _logger.LogDebug("ループ再生開始: {FilePath}", filePath);
 
         await Task.CompletedTask;
     }
@@ -56,7 +56,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     {
         if (!File.Exists(filePath))
         {
-            _logger.LogError($"音声ファイルが見つかりません: {filePath}");
+            _logger.LogError("音声ファイルが見つかりません: {FilePath}", filePath);
             throw new FileNotFoundException("音声ファイルが見つかりません", filePath);
         }
 
@@ -67,7 +67,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
         _player.Play();
 
         IsPlaying = true;
-        _logger.LogDebug($"1回再生開始: {filePath}");
+        _logger.LogDebug("1回再生開始: {FilePath}", filePath);
 
         await Task.CompletedTask;
     }

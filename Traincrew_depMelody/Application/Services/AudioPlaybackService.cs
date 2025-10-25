@@ -48,7 +48,7 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         if (profile == null)
         {
-            _logger.LogWarning($"音声プロファイルが見つかりません: {track.StationName} {track.TrackNumber}番線、デフォルトを使用");
+            _logger.LogWarning("音声プロファイルが見つかりません: {TrackStationName} {TrackTrackNumber}番線、デフォルトを使用", track.StationName, track.TrackNumber);
             await _melodyPlayer.PlayLoopAsync(GetDefaultMelodyPath());
             return;
         }
@@ -57,7 +57,7 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         if (!File.Exists(melodyPath))
         {
-            _logger.LogWarning($"メロディーファイルが見つかりません: {melodyPath}、デフォルトを使用");
+            _logger.LogWarning("メロディーファイルが見つかりません: {MelodyPath}、デフォルトを使用", melodyPath);
             melodyPath = GetDefaultMelodyPath();
 
             if (!File.Exists(melodyPath))
@@ -88,7 +88,7 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         if (profile == null)
         {
-            _logger.LogWarning($"音声プロファイルが見つかりません: {track.StationName} {track.TrackNumber}番線");
+            _logger.LogWarning("音声プロファイルが見つかりません: {TrackStationName} {TrackTrackNumber}番線", track.StationName, track.TrackNumber);
             return;
         }
 
@@ -97,13 +97,13 @@ public class AudioPlaybackService : IAudioPlaybackService
         if (string.IsNullOrEmpty(announcementPath))
         {
             _logger.LogWarning(
-                $"ドア閉め案内ファイルパスが設定されていません: {track.StationName} {track.TrackNumber}番線 ({(isInbound ? "上り" : "下り")})");
+                "ドア閉め案内ファイルパスが設定されていません: {TrackStationName} {TrackTrackNumber}番線 ({上り})", track.StationName, track.TrackNumber, isInbound ? "上り" : "下り");
             return;
         }
 
         if (!File.Exists(announcementPath))
         {
-            _logger.LogWarning($"ドア閉め案内ファイルが見つかりません: {announcementPath}");
+            _logger.LogWarning("ドア閉め案内ファイルが見つかりません: {AnnouncementPath}", announcementPath);
             return;
         }
 

@@ -25,7 +25,7 @@ public class FFmpegService : IFFmpegService
     {
         if (!File.Exists(filePath))
         {
-            _logger.LogWarning($"音声ファイルが見つかりません: {filePath}");
+            _logger.LogWarning("音声ファイルが見つかりません: {FilePath}", filePath);
             return null;
         }
 
@@ -61,16 +61,16 @@ public class FFmpegService : IFFmpegService
 
                 var totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
-                _logger.LogDebug($"音声ファイル長: {totalSeconds}秒 ({filePath})");
+                _logger.LogDebug("音声ファイル長: {TotalSeconds}秒 ({FilePath})", totalSeconds, filePath);
                 return totalSeconds;
             }
 
-            _logger.LogWarning($"音声ファイル長の取得に失敗: {filePath}");
+            _logger.LogWarning("音声ファイル長の取得に失敗: {FilePath}", filePath);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"FFmpeg実行中にエラーが発生: {filePath}");
+            _logger.LogError(ex, "FFmpeg実行中にエラーが発生: {FilePath}", filePath);
             return null;
         }
     }

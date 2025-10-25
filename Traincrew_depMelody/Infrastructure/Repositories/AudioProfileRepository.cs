@@ -77,7 +77,7 @@ public class AudioProfileRepository : IAudioProfileRepository
 
         if (!File.Exists(csvPath))
         {
-            _logger.LogError($"プロファイルCSVが見つかりません: {csvPath}");
+            _logger.LogError("プロファイルCSVが見つかりません: {CsvPath}", csvPath);
             throw new FileNotFoundException("プロファイルCSVが見つかりません", csvPath);
         }
 
@@ -99,7 +99,7 @@ public class AudioProfileRepository : IAudioProfileRepository
 
                 if (values.Length < 3)
                 {
-                    _logger.LogWarning($"不正なCSV行をスキップ: {line}");
+                    _logger.LogWarning("不正なCSV行をスキップ: {Line}", line);
                     continue;
                 }
 
@@ -122,7 +122,7 @@ public class AudioProfileRepository : IAudioProfileRepository
                 _profiles = profiles;
             }
 
-            _logger.LogInformation($"プロファイルCSVを読み込みました: {profiles.Count}件");
+            _logger.LogInformation("プロファイルCSVを読み込みました: {ProfilesCount}件", profiles.Count);
         }
         catch (Exception ex)
         {
