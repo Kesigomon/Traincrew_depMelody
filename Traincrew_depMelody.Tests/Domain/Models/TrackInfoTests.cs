@@ -75,7 +75,7 @@ public class TrackInfoTests
     public void ContainsCircuit_ExistingCircuit_ReturnsTrue()
     {
         // Arrange
-        var trackInfo = new TrackInfo("館浜", "1", new List<string> { "TC_001", "TC_002" });
+        var trackInfo = new TrackInfo("館浜", "1", new() { "TC_001", "TC_002" });
 
         // Act
         var result = trackInfo.ContainsCircuit("TC_001");
@@ -88,7 +88,7 @@ public class TrackInfoTests
     public void ContainsCircuit_NonExistingCircuit_ReturnsFalse()
     {
         // Arrange
-        var trackInfo = new TrackInfo("館浜", "1", new List<string> { "TC_001", "TC_002" });
+        var trackInfo = new TrackInfo("館浜", "1", new() { "TC_001", "TC_002" });
 
         // Act
         var result = trackInfo.ContainsCircuit("TC_999");
@@ -101,7 +101,7 @@ public class TrackInfoTests
     public void GetKey_ValidData_ReturnsFormattedKey()
     {
         // Arrange
-        var trackInfo = new TrackInfo("館浜", "1", new List<string> { "TC_001" });
+        var trackInfo = new TrackInfo("館浜", "1", new() { "TC_001" });
 
         // Act
         var key = trackInfo.GetKey();

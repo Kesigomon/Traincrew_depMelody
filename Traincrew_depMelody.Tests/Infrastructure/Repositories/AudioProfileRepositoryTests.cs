@@ -16,13 +16,18 @@ public class AudioProfileRepositoryTests : IDisposable
         // テスト用のCSVファイルパスを設定
         var testDataDir = Path.Combine(AppContext.BaseDirectory, "TestData");
 
-        _config = new AppConfiguration
+        _config = new()
         {
             ProfilesDirectory = testDataDir,
             CurrentProfileName = "AudioProfile"
         };
 
-        _mockLogger = new Mock<ILogger<AudioProfileRepository>>();
+        _mockLogger = new();
+    }
+
+    public void Dispose()
+    {
+        // クリーンアップ処理(必要に応じて)
     }
 
     [Fact]
@@ -86,10 +91,5 @@ public class AudioProfileRepositoryTests : IDisposable
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
-    }
-
-    public void Dispose()
-    {
-        // クリーンアップ処理(必要に応じて)
     }
 }

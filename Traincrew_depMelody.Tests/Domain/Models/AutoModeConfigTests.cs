@@ -16,7 +16,7 @@ public class AutoModeConfigTests
         };
         var trainState = new TrainState
         {
-            VehicleTypes = new List<string> { "50000", "50100" }
+            VehicleTypes = new() { "50000", "50100" }
         };
 
         // Act
@@ -37,7 +37,7 @@ public class AutoModeConfigTests
         };
         var trainState = new TrainState
         {
-            VehicleTypes = new List<string> { "E233", "E235" }
+            VehicleTypes = new() { "E233", "E235" }
         };
 
         // Act

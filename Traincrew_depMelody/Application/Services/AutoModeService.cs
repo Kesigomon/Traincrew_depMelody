@@ -8,34 +8,23 @@ namespace Traincrew_depMelody.Application.Services;
 
 public class AutoModeService : IAutoModeService
 {
-    private readonly ITraincrewGameService _gameService;
-    private readonly IMelodyControlService _melodyControl;
     private readonly IAudioPlaybackService _audioPlayback;
-    private readonly ITrackRepository _trackRepository;
+    private readonly object _configLock = new();
+    private readonly ITraincrewGameService _gameService;
     private readonly ILogger<AutoModeService> _logger;
-
-    private Timer? _checkTimer;
-    private AutoModeConfig _config = new AutoModeConfig { IsEnabled = false };
-    private readonly object _configLock = new object();
+    private readonly IMelodyControlService _melodyControl;
+    private readonly ITrackRepository _trackRepository;
 
     // 自動モードの状態追跡(ゲーム内時刻で記録)
     private TimeSpan? _arrivalTime;
-    private TimeSpan? _signalOpenTime;
-    private TimeSpan? _melodyStartTime;
+
+    private Timer? _checkTimer;
+    private AutoModeConfig _config = new() { IsEnabled = false };
     private TimeSpan? _doorOpenTime;
+    private TimeSpan? _melodyStartTime;
     private bool _melodyTriggered;
     private bool _previousDoorsOpen; // ドア状態の変化を検知するための前回値
-
-    public bool IsEnabled
-    {
-        get
-        {
-            lock (_configLock)
-            {
-                return _config.IsEnabled;
-            }
-        }
-    }
+    private TimeSpan? _signalOpenTime;
 
     public AutoModeService(
         ITraincrewGameService gameService,
@@ -51,8 +40,19 @@ public class AutoModeService : IAutoModeService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    public bool IsEnabled
+    {
+        get
+        {
+            lock (_configLock)
+            {
+                return _config.IsEnabled;
+            }
+        }
+    }
+
     /// <summary>
-    /// 自動モードを開始
+    ///     自動モードを開始
     /// </summary>
     public async Task StartAsync()
     {
@@ -64,13 +64,13 @@ public class AutoModeService : IAutoModeService
         _logger.LogInformation("自動モード開始");
 
         // 16ミリ秒周期でチェック
-        _checkTimer = new Timer(async _ => await CheckAndExecuteAsync(), null, 0, 16);
+        _checkTimer = new(async _ => await CheckAndExecuteAsync(), null, 0, 16);
 
         await Task.CompletedTask;
     }
 
     /// <summary>
-    /// 自動モードを停止
+    ///     自動モードを停止
     /// </summary>
     public async Task StopAsync()
     {
@@ -88,7 +88,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// 自動モード設定を取得
+    ///     自動モード設定を取得
     /// </summary>
     public AutoModeConfig GetConfig()
     {
@@ -99,7 +99,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// 自動モード設定を更新
+    ///     自動モード設定を更新
     /// </summary>
     public void UpdateConfig(AutoModeConfig config)
     {
@@ -110,7 +110,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// 自動モードの条件チェックと実行
+    ///     自動モードの条件チェックと実行
     /// </summary>
     private async Task CheckAndExecuteAsync()
     {
@@ -173,7 +173,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// メロディーON条件をチェック
+    ///     メロディーON条件をチェック
     /// </summary>
     private async Task CheckMelodyOnConditionsAsync(GameState gameState, TrainState trainState)
     {
@@ -182,7 +182,7 @@ public class AutoModeService : IAutoModeService
         var config = GetConfig();
         var now = gameState.CurrentGameTime; // ゲーム内時刻を使用
 
-        bool shouldStart = false;
+        var shouldStart = false;
 
         // 条件1: 到着後1秒後
         if (_arrivalTime != null && (now - _arrivalTime.Value).TotalSeconds >= config.DelayAfterArrival)
@@ -204,9 +204,9 @@ public class AutoModeService : IAutoModeService
             var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
             if (track != null)
             {
-                double melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track);
-                double margin = config.GetMarginForVehicle(trainState);
-                double totalOffset = melodyDuration + config.DoorCloseAnnouncementDuration + margin;
+                var melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track);
+                var margin = config.GetMarginForVehicle(trainState);
+                var totalOffset = melodyDuration + config.DoorCloseAnnouncementDuration + margin;
 
                 var targetTime = trainState.DepartureTime.Value.Subtract(TimeSpan.FromSeconds(totalOffset));
 
@@ -228,7 +228,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// メロディーOFF条件をチェック
+    ///     メロディーOFF条件をチェック
     /// </summary>
     private async Task CheckMelodyOffConditionsAsync(GameState gameState, TrainState trainState)
     {
@@ -240,25 +240,20 @@ public class AutoModeService : IAutoModeService
         var config = GetConfig();
         var now = gameState.CurrentGameTime; // ゲーム内時刻を使用
 
-        bool shouldStop = false;
+        var shouldStop = false;
 
         // 条件1: ON後最低1秒後
-        if (_melodyStartTime != null && (now - _melodyStartTime.Value).TotalSeconds < config.MinimumMelodyDuration)
-        {
-            return;
-        }
+        if (_melodyStartTime != null &&
+            (now - _melodyStartTime.Value).TotalSeconds < config.MinimumMelodyDuration) return;
 
         // 条件2: ドア開後最低12秒後
-        if (_doorOpenTime != null && (now - _doorOpenTime.Value).TotalSeconds < config.MinimumDoorOpenDuration)
-        {
-            return;
-        }
+        if (_doorOpenTime != null && (now - _doorOpenTime.Value).TotalSeconds < config.MinimumDoorOpenDuration) return;
 
         // 条件3: 発車時刻ベース
         if (trainState.DepartureTime != null)
         {
-            double margin = config.GetMarginForVehicle(trainState);
-            double totalOffset = config.DoorCloseAnnouncementDuration + margin;
+            var margin = config.GetMarginForVehicle(trainState);
+            var totalOffset = config.DoorCloseAnnouncementDuration + margin;
 
             var targetTime = trainState.DepartureTime.Value.Subtract(TimeSpan.FromSeconds(totalOffset));
 
@@ -277,7 +272,7 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    /// 状態をリセット
+    ///     状態をリセット
     /// </summary>
     private void ResetState()
     {

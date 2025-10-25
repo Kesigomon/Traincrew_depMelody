@@ -12,7 +12,7 @@ public class MelodyStateTests
         var originalState = new MelodyState { IsPlaying = false };
 
         // Act
-        var newState = originalState.With(isPlaying: true);
+        var newState = originalState.With(true);
 
         // Assert
         newState.IsPlaying.Should().BeTrue();
@@ -23,7 +23,7 @@ public class MelodyStateTests
     public void With_UpdateMultipleProperties_PreservesOthers()
     {
         // Arrange
-        var trackInfo = new TrackInfo("館浜", "1", new List<string> { "TC_001" });
+        var trackInfo = new TrackInfo("館浜", "1", new() { "TC_001" });
         var originalState = new MelodyState
         {
             IsPlaying = false,
@@ -33,7 +33,7 @@ public class MelodyStateTests
 
         // Act
         var newState = originalState.With(
-            isPlaying: true,
+            true,
             currentTrack: trackInfo);
 
         // Assert
@@ -47,7 +47,7 @@ public class MelodyStateTests
     public void With_NoParameters_ReturnsSameValues()
     {
         // Arrange
-        var trackInfo = new TrackInfo("館浜", "1", new List<string> { "TC_001" });
+        var trackInfo = new TrackInfo("館浜", "1", new() { "TC_001" });
         var originalState = new MelodyState
         {
             IsPlaying = true,

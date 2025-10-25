@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Models;
@@ -6,10 +7,10 @@ namespace Traincrew_depMelody.Infrastructure.Repositories;
 
 public class AudioProfileRepository : IAudioProfileRepository
 {
+    private readonly object _cacheLock = new();
     private readonly AppConfiguration _config;
     private readonly ILogger<AudioProfileRepository> _logger;
-    private Dictionary<string, AudioProfile> _profiles = new Dictionary<string, AudioProfile>();
-    private readonly object _cacheLock = new object();
+    private Dictionary<string, AudioProfile> _profiles = new();
 
     public AudioProfileRepository(AppConfiguration config, ILogger<AudioProfileRepository> logger)
     {
@@ -18,7 +19,7 @@ public class AudioProfileRepository : IAudioProfileRepository
     }
 
     /// <summary>
-    /// 全ての音声プロファイルを取得
+    ///     全ての音声プロファイルを取得
     /// </summary>
     public async Task<IEnumerable<AudioProfile>> GetAllProfilesAsync()
     {
@@ -31,13 +32,13 @@ public class AudioProfileRepository : IAudioProfileRepository
     }
 
     /// <summary>
-    /// 駅名と番線から音声プロファイルを検索
+    ///     駅名と番線から音声プロファイルを検索
     /// </summary>
     public async Task<AudioProfile?> FindProfileAsync(string stationName, string trackNumber)
     {
         await EnsureLoadedAsync();
 
-        string key = $"{stationName}_{trackNumber}";
+        var key = $"{stationName}_{trackNumber}";
 
         lock (_cacheLock)
         {
@@ -46,7 +47,7 @@ public class AudioProfileRepository : IAudioProfileRepository
     }
 
     /// <summary>
-    /// 音声プロファイルCSVを再読み込み
+    ///     音声プロファイルCSVを再読み込み
     /// </summary>
     public async Task ReloadAsync()
     {
@@ -55,7 +56,7 @@ public class AudioProfileRepository : IAudioProfileRepository
     }
 
     /// <summary>
-    /// 初回読み込み確認
+    ///     初回読み込み確認
     /// </summary>
     private async Task EnsureLoadedAsync()
     {
@@ -68,11 +69,11 @@ public class AudioProfileRepository : IAudioProfileRepository
     }
 
     /// <summary>
-    /// CSVファイルを読み込み
+    ///     CSVファイルを読み込み
     /// </summary>
     private async Task LoadCsvAsync()
     {
-        string csvPath = Path.Combine(_config.ProfilesDirectory, $"{_config.CurrentProfileName}.csv");
+        var csvPath = Path.Combine(_config.ProfilesDirectory, $"{_config.CurrentProfileName}.csv");
 
         if (!File.Exists(csvPath))
         {
@@ -84,7 +85,7 @@ public class AudioProfileRepository : IAudioProfileRepository
 
         try
         {
-            using var reader = new StreamReader(csvPath, System.Text.Encoding.UTF8);
+            using var reader = new StreamReader(csvPath, Encoding.UTF8);
 
             // ヘッダー行をスキップ
             await reader.ReadLineAsync();
@@ -102,11 +103,11 @@ public class AudioProfileRepository : IAudioProfileRepository
                     continue;
                 }
 
-                string stationName = values[0].Trim();
-                string trackNumber = values[1].Trim();
-                string melodyPath = values[2].Trim();
-                string? doorDownPath = values.Length > 3 ? values[3].Trim() : null;
-                string? doorUpPath = values.Length > 4 ? values[4].Trim() : null;
+                var stationName = values[0].Trim();
+                var trackNumber = values[1].Trim();
+                var melodyPath = values[2].Trim();
+                var doorDownPath = values.Length > 3 ? values[3].Trim() : null;
+                var doorUpPath = values.Length > 4 ? values[4].Trim() : null;
 
                 // 空文字列はnullに変換
                 if (string.IsNullOrEmpty(doorDownPath)) doorDownPath = null;

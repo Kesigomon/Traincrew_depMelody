@@ -93,7 +93,7 @@ public class AudioProfileTests
         var profile = new AudioProfile("館浜", "1", "melody.mp3", downPath, upPath);
 
         // Act
-        var result = profile.GetDoorCloseAnnouncementPath(isInbound: true);
+        var result = profile.GetDoorCloseAnnouncementPath(true);
 
         // Assert
         result.Should().Be(upPath);
@@ -108,7 +108,7 @@ public class AudioProfileTests
         var profile = new AudioProfile("館浜", "1", "melody.mp3", downPath, upPath);
 
         // Act
-        var result = profile.GetDoorCloseAnnouncementPath(isInbound: false);
+        var result = profile.GetDoorCloseAnnouncementPath(false);
 
         // Assert
         result.Should().Be(downPath);

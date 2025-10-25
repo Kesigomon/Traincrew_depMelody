@@ -1,19 +1,21 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Traincrew_depMelody.Domain.Interfaces;
 using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
+using Traincrew_depMelody.Infrastructure.AudioServices;
 
 namespace Traincrew_depMelody.Application.Services;
 
 public class AudioPlaybackService : IAudioPlaybackService
 {
-    private readonly IAudioPlayerService _melodyPlayer;
     private readonly IAudioPlayerService _announcementPlayer;
-    private readonly IFFmpegService _ffmpegService;
     private readonly IAudioProfileRepository _audioProfileRepository;
     private readonly AppConfiguration _config;
+    private readonly IFFmpegService _ffmpegService;
     private readonly ILogger<AudioPlaybackService> _logger;
+    private readonly IAudioPlayerService _melodyPlayer;
 
     public AudioPlaybackService(
         ILogger<AudioPlaybackService> logger,
@@ -23,18 +25,21 @@ public class AudioPlaybackService : IAudioPlaybackService
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _ffmpegService = ffmpegService ?? throw new ArgumentNullException(nameof(ffmpegService));
-        _audioProfileRepository = audioProfileRepository ?? throw new ArgumentNullException(nameof(audioProfileRepository));
+        _audioProfileRepository =
+            audioProfileRepository ?? throw new ArgumentNullException(nameof(audioProfileRepository));
         _config = config ?? throw new ArgumentNullException(nameof(config));
 
         // 2つのMediaPlayerインスタンスを作成(メロディー用と案内用)
-        _melodyPlayer = new Infrastructure.AudioServices.MediaPlayerService(
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<Infrastructure.AudioServices.MediaPlayerService>.Instance);
-        _announcementPlayer = new Infrastructure.AudioServices.MediaPlayerService(
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<Infrastructure.AudioServices.MediaPlayerService>.Instance);
+        _melodyPlayer = new MediaPlayerService(
+            NullLogger<MediaPlayerService>
+                .Instance);
+        _announcementPlayer = new MediaPlayerService(
+            NullLogger<MediaPlayerService>
+                .Instance);
     }
 
     /// <summary>
-    /// メロディーを再生(ループ)
+    ///     メロディーを再生(ループ)
     /// </summary>
     public async Task PlayMelodyAsync(TrackInfo track)
     {
@@ -48,7 +53,7 @@ public class AudioPlaybackService : IAudioPlaybackService
             return;
         }
 
-        string melodyPath = profile.MelodyFilePath;
+        var melodyPath = profile.MelodyFilePath;
 
         if (!File.Exists(melodyPath))
         {
@@ -66,7 +71,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
-    /// メロディーを停止
+    ///     メロディーを停止
     /// </summary>
     public void StopMelody()
     {
@@ -74,7 +79,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
-    /// ドア閉め案内を再生(1回)
+    ///     ドア閉め案内を再生(1回)
     /// </summary>
     public async Task PlayDoorCloseAnnouncementAsync(TrackInfo track, bool isInbound)
     {
@@ -87,11 +92,12 @@ public class AudioPlaybackService : IAudioPlaybackService
             return;
         }
 
-        string? announcementPath = profile.GetDoorCloseAnnouncementPath(isInbound);
+        var announcementPath = profile.GetDoorCloseAnnouncementPath(isInbound);
 
         if (string.IsNullOrEmpty(announcementPath))
         {
-            _logger.LogWarning($"ドア閉め案内ファイルパスが設定されていません: {track.StationName} {track.TrackNumber}番線 ({(isInbound ? "上り" : "下り")})");
+            _logger.LogWarning(
+                $"ドア閉め案内ファイルパスが設定されていません: {track.StationName} {track.TrackNumber}番線 ({(isInbound ? "上り" : "下り")})");
             return;
         }
 
@@ -105,7 +111,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
-    /// 全ての音声を一時停止
+    ///     全ての音声を一時停止
     /// </summary>
     public void PauseAll()
     {
@@ -114,7 +120,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
-    /// 一時停止から再開
+    ///     一時停止から再開
     /// </summary>
     public void ResumeAll()
     {
@@ -123,7 +129,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
-    /// メロディーの長さを取得(秒)
+    ///     メロディーの長さを取得(秒)
     /// </summary>
     public async Task<double> GetMelodyDurationAsync(TrackInfo track)
     {
@@ -132,20 +138,16 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         string melodyPath;
         if (profile == null || !File.Exists(profile.MelodyFilePath))
-        {
             melodyPath = GetDefaultMelodyPath();
-        }
         else
-        {
             melodyPath = profile.MelodyFilePath;
-        }
 
         var duration = await _ffmpegService.GetAudioDurationAsync(melodyPath);
         return duration ?? 30.0; // デフォルト30秒
     }
 
     /// <summary>
-    /// デフォルトメロディーパスを取得
+    ///     デフォルトメロディーパスを取得
     /// </summary>
     private string GetDefaultMelodyPath()
     {

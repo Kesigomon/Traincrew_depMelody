@@ -8,15 +8,13 @@ namespace Traincrew_depMelody.Application.Services;
 
 public class MelodyControlService : IMelodyControlService
 {
-    private readonly ITraincrewGameService _gameService;
-    private readonly ITrackRepository _trackRepository;
     private readonly IAudioPlaybackService _audioPlayback;
+    private readonly ITraincrewGameService _gameService;
     private readonly ILogger<MelodyControlService> _logger;
+    private readonly object _stateLock = new();
+    private readonly ITrackRepository _trackRepository;
 
-    private MelodyState _currentState = new MelodyState { IsPlaying = false };
-    private readonly object _stateLock = new object();
-
-    public event EventHandler<MelodyState>? StateChanged;
+    private MelodyState _currentState = new() { IsPlaying = false };
 
     public MelodyControlService(
         ITraincrewGameService gameService,
@@ -33,8 +31,10 @@ public class MelodyControlService : IMelodyControlService
         _gameService.GameStateChanged += OnGameStateChanged;
     }
 
+    public event EventHandler<MelodyState>? StateChanged;
+
     /// <summary>
-    /// メロディー再生を開始
+    ///     メロディー再生を開始
     /// </summary>
     public async Task StartMelodyAsync()
     {
@@ -74,7 +74,7 @@ public class MelodyControlService : IMelodyControlService
         lock (_stateLock)
         {
             _currentState = _currentState.With(
-                isPlaying: true,
+                true,
                 currentTrack: track,
                 startedAt: currentGameState.CurrentGameTime,
                 doorCloseAnnouncementPlayed: false
@@ -85,7 +85,7 @@ public class MelodyControlService : IMelodyControlService
     }
 
     /// <summary>
-    /// メロディーを停止し、ドア閉め案内を再生
+    ///     メロディーを停止し、ドア閉め案内を再生
     /// </summary>
     public async Task StopMelodyAsync()
     {
@@ -115,32 +115,29 @@ public class MelodyControlService : IMelodyControlService
         // 状態更新
         lock (_stateLock)
         {
-            _currentState = _currentState.With(isPlaying: false);
+            _currentState = _currentState.With(false);
         }
 
         StateChanged?.Invoke(this, _currentState);
 
         // ゲーム時刻で1秒待機
         var gameState = await _gameService.GetCurrentGameStateAsync();
-        TimeSpan startTime = gameState.CurrentGameTime;
-        TimeSpan targetTime = startTime.Add(TimeSpan.FromSeconds(1.0));
+        var startTime = gameState.CurrentGameTime;
+        var targetTime = startTime.Add(TimeSpan.FromSeconds(1.0));
 
         while (true)
         {
             gameState = await _gameService.GetCurrentGameStateAsync();
 
             // ゲーム時刻が目標時刻に到達したら終了
-            if (gameState.CurrentGameTime >= targetTime)
-            {
-                break;
-            }
+            if (gameState.CurrentGameTime >= targetTime) break;
 
             await Task.Delay(16); // 16ms周期でチェック
         }
 
         // ドア閉め案内再生
         gameState = await _gameService.GetCurrentGameStateAsync();
-        bool isInbound = gameState.TrainState?.IsInbound() ?? false;
+        var isInbound = gameState.TrainState?.IsInbound() ?? false;
 
         _logger.LogInformation($"ドア閉め案内再生: {track.TrackNumber}番線 ({(isInbound ? "上り" : "下り")})");
         await _audioPlayback.PlayDoorCloseAnnouncementAsync(track, isInbound);
@@ -155,7 +152,7 @@ public class MelodyControlService : IMelodyControlService
     }
 
     /// <summary>
-    /// 現在のメロディー状態を取得
+    ///     現在のメロディー状態を取得
     /// </summary>
     public MelodyState GetCurrentState()
     {
@@ -166,7 +163,7 @@ public class MelodyControlService : IMelodyControlService
     }
 
     /// <summary>
-    /// UI操作が有効かどうか
+    ///     UI操作が有効かどうか
     /// </summary>
     public async Task<bool> IsUiEnabledAsync()
     {
@@ -175,33 +172,27 @@ public class MelodyControlService : IMelodyControlService
     }
 
     /// <summary>
-    /// ゲーム状態が変化したときの処理
+    ///     ゲーム状態が変化したときの処理
     /// </summary>
     private void OnGameStateChanged(object? sender, GameState gameState)
     {
         // 一時停止状態の処理
         if (gameState.IsPaused)
-        {
             _audioPlayback.PauseAll();
-        }
         else
-        {
             _audioPlayback.ResumeAll();
-        }
 
         // 駅から離れた場合、メロディーを停止
         if (!gameState.IsAtStation)
-        {
             lock (_stateLock)
             {
                 if (_currentState.IsPlaying)
                 {
                     _logger.LogInformation("駅から離れたため、メロディーを停止します");
                     _audioPlayback.StopMelody();
-                    _currentState = _currentState.With(isPlaying: false);
+                    _currentState = _currentState.With(false);
                     StateChanged?.Invoke(this, _currentState);
                 }
             }
-        }
     }
 }

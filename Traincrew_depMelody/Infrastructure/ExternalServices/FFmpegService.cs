@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
 
@@ -19,7 +19,7 @@ public class FFmpegService : IFFmpegService
     }
 
     /// <summary>
-    /// 音声ファイルの長さ(秒)を取得
+    ///     音声ファイルの長さ(秒)を取得
     /// </summary>
     public async Task<double?> GetAudioDurationAsync(string filePath)
     {
@@ -47,7 +47,7 @@ public class FFmpegService : IFFmpegService
                 return null;
             }
 
-            string output = await process.StandardError.ReadToEndAsync();
+            var output = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
             // "Duration: 00:00:35.50" のような行をパース
@@ -55,11 +55,11 @@ public class FFmpegService : IFFmpegService
 
             if (match.Success)
             {
-                int hours = int.Parse(match.Groups[1].Value);
-                int minutes = int.Parse(match.Groups[2].Value);
-                double seconds = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+                var hours = int.Parse(match.Groups[1].Value);
+                var minutes = int.Parse(match.Groups[2].Value);
+                var seconds = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
 
-                double totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                var totalSeconds = hours * 3600 + minutes * 60 + seconds;
 
                 _logger.LogDebug($"音声ファイル長: {totalSeconds}秒 ({filePath})");
                 return totalSeconds;

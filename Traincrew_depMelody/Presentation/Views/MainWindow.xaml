@@ -5,8 +5,8 @@
         ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- ONボタン -->
@@ -16,7 +16,7 @@
                 FontSize="72"
                 Background="Black"
                 Foreground="White"
-                Click="OnButton_Click"/>
+                Click="OnButton_Click" />
 
         <!-- OFFボタン -->
         <Button x:Name="OffButton"
@@ -25,6 +25,6 @@
                 FontSize="72"
                 Background="Red"
                 Foreground="White"
-                Click="OffButton_Click"/>
+                Click="OffButton_Click" />
     </Grid>
 </Window>

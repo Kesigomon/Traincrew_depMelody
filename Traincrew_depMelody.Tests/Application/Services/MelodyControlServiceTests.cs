@@ -11,17 +11,17 @@ namespace Traincrew_depMelody.Tests.Application.Services;
 
 public class MelodyControlServiceTests
 {
-    private readonly Mock<ITraincrewGameService> _mockGameService;
-    private readonly Mock<ITrackRepository> _mockTrackRepo;
     private readonly Mock<IAudioPlaybackService> _mockAudioPlayback;
+    private readonly Mock<ITraincrewGameService> _mockGameService;
     private readonly Mock<ILogger<MelodyControlService>> _mockLogger;
+    private readonly Mock<ITrackRepository> _mockTrackRepo;
 
     public MelodyControlServiceTests()
     {
-        _mockGameService = new Mock<ITraincrewGameService>();
-        _mockTrackRepo = new Mock<ITrackRepository>();
-        _mockAudioPlayback = new Mock<IAudioPlaybackService>();
-        _mockLogger = new Mock<ILogger<MelodyControlService>>();
+        _mockGameService = new();
+        _mockTrackRepo = new();
+        _mockAudioPlayback = new();
+        _mockLogger = new();
     }
 
     [Fact]

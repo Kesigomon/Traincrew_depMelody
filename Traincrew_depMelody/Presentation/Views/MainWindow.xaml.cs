@@ -9,10 +9,10 @@ namespace Traincrew_depMelody.Presentation.Views;
 
 public partial class MainWindow : Window
 {
-    private readonly IMelodyControlService _melodyControl;
     private readonly IAutoModeService _autoMode;
     private readonly ITraincrewGameService _gameService;
     private readonly ILogger<MainWindow> _logger;
+    private readonly IMelodyControlService _melodyControl;
 
     public MainWindow(
         IMelodyControlService melodyControl,

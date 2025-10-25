@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Models;
@@ -6,10 +7,10 @@ namespace Traincrew_depMelody.Infrastructure.Repositories;
 
 public class TrackRepository : ITrackRepository
 {
+    private readonly object _cacheLock = new();
     private readonly AppConfiguration _config;
     private readonly ILogger<TrackRepository> _logger;
-    private List<TrackInfo> _tracks = new List<TrackInfo>();
-    private readonly object _cacheLock = new object();
+    private List<TrackInfo> _tracks = new();
 
     public TrackRepository(AppConfiguration config, ILogger<TrackRepository> logger)
     {
@@ -18,7 +19,7 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// 全ての駅・番線情報を取得
+    ///     全ての駅・番線情報を取得
     /// </summary>
     public async Task<IEnumerable<TrackInfo>> GetAllTracksAsync()
     {
@@ -31,7 +32,7 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// 軌道回路IDから駅・番線情報を検索
+    ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
     public async Task<TrackInfo?> FindTrackByCircuitIdAsync(string circuitId)
     {
@@ -44,7 +45,7 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// 駅名と番線から駅・番線情報を検索
+    ///     駅名と番線から駅・番線情報を検索
     /// </summary>
     public async Task<TrackInfo?> FindTrackByStationAndNumberAsync(string stationName, string trackNumber)
     {
@@ -58,7 +59,7 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// CSVを再読み込み
+    ///     CSVを再読み込み
     /// </summary>
     public async Task ReloadAsync()
     {
@@ -67,7 +68,7 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// 初回読み込み確認
+    ///     初回読み込み確認
     /// </summary>
     private async Task EnsureLoadedAsync()
     {
@@ -80,11 +81,11 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    /// CSVファイルを読み込み
+    ///     CSVファイルを読み込み
     /// </summary>
     private async Task LoadCsvAsync()
     {
-        string csvPath = _config.StationsCsvPath;
+        var csvPath = _config.StationsCsvPath;
 
         if (!File.Exists(csvPath))
         {
@@ -96,7 +97,7 @@ public class TrackRepository : ITrackRepository
 
         try
         {
-            using var reader = new StreamReader(csvPath, System.Text.Encoding.UTF8);
+            using var reader = new StreamReader(csvPath, Encoding.UTF8);
 
             // ヘッダー行をスキップ
             await reader.ReadLineAsync();
@@ -114,17 +115,14 @@ public class TrackRepository : ITrackRepository
                     continue;
                 }
 
-                string stationName = values[0].Trim();
-                string trackNumber = values[1].Trim();
+                var stationName = values[0].Trim();
+                var trackNumber = values[1].Trim();
 
                 var circuits = new List<string>();
-                for (int i = 2; i < values.Length; i++)
+                for (var i = 2; i < values.Length; i++)
                 {
-                    string circuit = values[i].Trim();
-                    if (!string.IsNullOrEmpty(circuit))
-                    {
-                        circuits.Add(circuit);
-                    }
+                    var circuit = values[i].Trim();
+                    if (!string.IsNullOrEmpty(circuit)) circuits.Add(circuit);
                 }
 
                 var trackInfo = new TrackInfo(stationName, trackNumber, circuits);

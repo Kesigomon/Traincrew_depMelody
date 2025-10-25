@@ -8,21 +8,26 @@ namespace Traincrew_depMelody.Tests.Infrastructure.Repositories;
 
 public class TrackRepositoryTests : IDisposable
 {
-    private readonly string _testCsvPath;
     private readonly AppConfiguration _config;
     private readonly Mock<ILogger<TrackRepository>> _mockLogger;
+    private readonly string _testCsvPath;
 
     public TrackRepositoryTests()
     {
         // テスト用のCSVファイルパスを設定
         _testCsvPath = Path.Combine(AppContext.BaseDirectory, "TestData", "stations.csv");
 
-        _config = new AppConfiguration
+        _config = new()
         {
             StationsCsvPath = _testCsvPath
         };
 
-        _mockLogger = new Mock<ILogger<TrackRepository>>();
+        _mockLogger = new();
+    }
+
+    public void Dispose()
+    {
+        // クリーンアップ処理(必要に応じて)
     }
 
     [Fact]
@@ -113,10 +118,5 @@ public class TrackRepositoryTests : IDisposable
 
         // Assert
         act.Should().Throw<ArgumentNullException>();
-    }
-
-    public void Dispose()
-    {
-        // クリーンアップ処理(必要に応じて)
     }
 }
