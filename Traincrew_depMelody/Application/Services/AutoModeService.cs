@@ -19,10 +19,10 @@ public class AutoModeService : IAutoModeService
     private readonly object _configLock = new object();
 
     // 自動モードの状態追跡(ゲーム内時刻で記録)
-    private DateTime? _arrivalTime;
-    private DateTime? _signalOpenTime;
-    private DateTime? _melodyStartTime;
-    private DateTime? _doorOpenTime;
+    private TimeSpan? _arrivalTime;
+    private TimeSpan? _signalOpenTime;
+    private TimeSpan? _melodyStartTime;
+    private TimeSpan? _doorOpenTime;
     private bool _melodyTriggered;
 
     public bool IsEnabled
@@ -204,12 +204,12 @@ public class AutoModeService : IAutoModeService
                 double margin = config.GetMarginForVehicle(trainState);
                 double totalOffset = melodyDuration + config.DoorCloseAnnouncementDuration + margin;
 
-                var targetTime = trainState.DepartureTime.Value.AddSeconds(-totalOffset);
+                var targetTime = trainState.DepartureTime.Value.Subtract(TimeSpan.FromSeconds(totalOffset));
 
                 if (now >= targetTime)
                 {
                     shouldStart = true;
-                    _logger.LogDebug($"条件3満たす: 発車時刻ベース (発車予定: {trainState.DepartureTime:HH:mm:ss})");
+                    _logger.LogDebug($"条件3満たす: 発車時刻ベース (発車予定: {trainState.DepartureTime})");
                 }
             }
         }
@@ -256,12 +256,12 @@ public class AutoModeService : IAutoModeService
             double margin = config.GetMarginForVehicle(trainState);
             double totalOffset = config.DoorCloseAnnouncementDuration + margin;
 
-            var targetTime = trainState.DepartureTime.Value.AddSeconds(-totalOffset);
+            var targetTime = trainState.DepartureTime.Value.Subtract(TimeSpan.FromSeconds(totalOffset));
 
             if (now >= targetTime)
             {
                 shouldStop = true;
-                _logger.LogDebug($"条件3満たす: 発車時刻ベース停止 (発車予定: {trainState.DepartureTime:HH:mm:ss})");
+                _logger.LogDebug($"条件3満たす: 発車時刻ベース停止 (発車予定: {trainState.DepartureTime})");
             }
         }
 

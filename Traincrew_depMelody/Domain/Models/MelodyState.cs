@@ -21,9 +21,9 @@ public class MelodyState
     public TrackInfo? CurrentTrack { get; init; }
 
     /// <summary>
-    /// メロディー開始時刻
+    /// メロディー開始時刻 (ゲーム内時刻)
     /// </summary>
-    public DateTime? StartedAt { get; init; }
+    public TimeSpan? StartedAt { get; init; }
 
     /// <summary>
     /// ドア閉め案内を再生済みか
@@ -37,7 +37,7 @@ public class MelodyState
         bool? isPlaying = null,
         string? currentMelodyPath = null,
         TrackInfo? currentTrack = null,
-        DateTime? startedAt = null,
+        TimeSpan? startedAt = null,
         bool? doorCloseAnnouncementPlayed = null)
     {
         return new MelodyState

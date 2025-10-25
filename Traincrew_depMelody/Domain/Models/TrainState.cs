@@ -26,14 +26,14 @@ public class TrainState
     public string? VehicleType { get; init; }
 
     /// <summary>
-    /// 発車時刻(ダイヤ上の予定時刻)
+    /// 発車時刻(ダイヤ上の予定時刻、ゲーム内時刻)
     /// </summary>
-    public DateTime? DepartureTime { get; init; }
+    public TimeSpan? DepartureTime { get; init; }
 
     /// <summary>
-    /// 到着時刻
+    /// 到着時刻(ゲーム内時刻)
     /// </summary>
-    public DateTime? ArrivalTime { get; init; }
+    public TimeSpan? ArrivalTime { get; init; }
 
     /// <summary>
     /// 停車中かどうか

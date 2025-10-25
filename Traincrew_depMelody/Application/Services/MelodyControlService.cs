@@ -122,8 +122,8 @@ public class MelodyControlService : IMelodyControlService
 
         // ゲーム時刻で1秒待機
         var gameState = await _gameService.GetCurrentGameStateAsync();
-        DateTime startTime = gameState.CurrentGameTime;
-        DateTime targetTime = startTime.AddSeconds(1.0);
+        TimeSpan startTime = gameState.CurrentGameTime;
+        TimeSpan targetTime = startTime.Add(TimeSpan.FromSeconds(1.0));
 
         while (true)
         {

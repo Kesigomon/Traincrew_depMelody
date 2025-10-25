@@ -118,7 +118,8 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             var trainState = TrainCrewInput.GetTrainState();
             var gameScreen = TrainCrewInput.gameState.gameScreen;
 
-            var currentGameTime = trainState.NowTime; // Timespan型
+            // ゲーム内時刻を取得 
+            var currentGameTime = trainState.NowTime;
 
             var crewType = DomainCrewType.None;
             if (gameScreen is TrainCrew.GameScreen.MainGame or TrainCrew.GameScreen.MainGame_Pause)
@@ -138,9 +139,9 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 Speed = trainState.Speed,
                 IsDoorsOpen = !trainState.AllClose,
                 TrainNumber = trainState.diaName,
-                VehicleType = null, // TODO: 実装 (modelNameはプロパティに存在しない)
-                DepartureTime = null, // TODO: 実装
-                ArrivalTime = null
+                VehicleType = null, // TrainCrewには車両型式の情報がない
+                DepartureTime = null, // TrainCrewには発車時刻の情報がない
+                ArrivalTime = null // TrainCrewには到着時刻の情報がない
             };
 
             var signalAspect = TrainCrewInput.signals.Any(s => s.phase != "R")
@@ -171,7 +172,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
                 IsAtStation = isAtStation,
-                CurrentGameTime = DateTime.Now // TODO: ゲーム時刻の取得
+                CurrentGameTime = currentGameTime
             };
         }
         catch (Exception ex)
@@ -182,7 +183,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 Screen = DomainGameScreen.Other,
                 IsPaused = false,
                 CrewType = DomainCrewType.None,
-                CurrentGameTime = DateTime.Now,
+                CurrentGameTime = TimeSpan.Zero,
                 IsAtStation = false
             };
         }

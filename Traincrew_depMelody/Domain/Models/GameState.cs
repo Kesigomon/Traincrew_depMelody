@@ -38,7 +38,7 @@ public class GameState
     /// <summary>
     /// ゲーム内の現在時刻(ポーズに追従するため)
     /// </summary>
-    public DateTime CurrentGameTime { get; init; }
+    public TimeSpan CurrentGameTime { get; init; }
 
     /// <summary>
     /// プレイ中かどうか
