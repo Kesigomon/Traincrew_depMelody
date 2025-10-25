@@ -141,7 +141,6 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 TrainNumber = trainState.diaName,
                 VehicleType = null, // TrainCrewには車両型式の情報がない
                 DepartureTime = null, // TrainCrewには発車時刻の情報がない
-                ArrivalTime = null // TrainCrewには到着時刻の情報がない
             };
 
             var signalAspect = TrainCrewInput.signals.Any(s => s.phase != "R")

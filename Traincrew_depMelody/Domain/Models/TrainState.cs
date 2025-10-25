@@ -31,11 +31,6 @@ public class TrainState
     public TimeSpan? DepartureTime { get; init; }
 
     /// <summary>
-    /// 到着時刻(ゲーム内時刻)
-    /// </summary>
-    public TimeSpan? ArrivalTime { get; init; }
-
-    /// <summary>
     /// 停車中かどうか
     /// </summary>
     public bool IsStopped => Speed < 0.1;
