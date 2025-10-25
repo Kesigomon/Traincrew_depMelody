@@ -24,6 +24,7 @@ public class AutoModeService : IAutoModeService
     private TimeSpan? _melodyStartTime;
     private TimeSpan? _doorOpenTime;
     private bool _melodyTriggered;
+    private bool _previousDoorsOpen; // ドア状態の変化を検知するための前回値
 
     public bool IsEnabled
     {
@@ -135,11 +136,11 @@ public class AutoModeService : IAutoModeService
             var trainState = gameState.TrainState;
             if (trainState == null) return;
 
-            // 到着時刻を記録(ゲーム内時刻)
-            if (trainState.IsStopped && _arrivalTime == null)
+            // 到着時刻を記録(ドアが閉→開に変化したゲーム内時刻)
+            if (!_previousDoorsOpen && trainState.IsDoorsOpen && _arrivalTime == null)
             {
                 _arrivalTime = gameState.CurrentGameTime;
-                _logger.LogDebug("到着を検知");
+                _logger.LogDebug("到着を検知(ドア開)");
             }
 
             // 信号開通時刻を記録(ゲーム内時刻)
@@ -155,6 +156,9 @@ public class AutoModeService : IAutoModeService
                 _doorOpenTime = gameState.CurrentGameTime;
                 _logger.LogDebug("ドア開を検知");
             }
+
+            // 次回の比較のため現在のドア状態を保存
+            _previousDoorsOpen = trainState.IsDoorsOpen;
 
             // メロディーON条件チェック
             await CheckMelodyOnConditionsAsync(gameState, trainState);
@@ -282,5 +286,6 @@ public class AutoModeService : IAutoModeService
         _melodyStartTime = null;
         _doorOpenTime = null;
         _melodyTriggered = false;
+        _previousDoorsOpen = false;
     }
 }
