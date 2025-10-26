@@ -17,6 +17,10 @@ public class AudioPlaybackService : IAudioPlaybackService
     private readonly ILogger<AudioPlaybackService> _logger;
     private readonly IAudioPlayerService _melodyPlayer;
 
+    // ポーズ前の再生状態を追跡
+    private bool _melodyWasPlayingBeforePause;
+    private bool _announcementWasPlayingBeforePause;
+
     public AudioPlaybackService(
         ILogger<AudioPlaybackService> logger,
         IFFmpegService ffmpegService,
@@ -115,6 +119,10 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// </summary>
     public void PauseAll()
     {
+        // ポーズ前の再生状態を記録
+        _melodyWasPlayingBeforePause = _melodyPlayer.IsPlaying;
+        _announcementWasPlayingBeforePause = _announcementPlayer.IsPlaying;
+
         _melodyPlayer.Pause();
         _announcementPlayer.Pause();
     }
@@ -124,8 +132,20 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// </summary>
     public void ResumeAll()
     {
-        _melodyPlayer.Resume();
-        _announcementPlayer.Resume();
+        // ポーズ前に再生していたもののみを再開
+        if (_melodyWasPlayingBeforePause)
+        {
+            _melodyPlayer.Resume();
+        }
+
+        if (_announcementWasPlayingBeforePause)
+        {
+            _announcementPlayer.Resume();
+        }
+
+        // フラグをリセット
+        _melodyWasPlayingBeforePause = false;
+        _announcementWasPlayingBeforePause = false;
     }
 
     /// <summary>
