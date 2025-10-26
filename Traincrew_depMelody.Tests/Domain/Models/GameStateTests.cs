@@ -43,30 +43,4 @@ public class GameStateTests
         // Act & Assert
         gameState.Screen.Should().Be(GameScreen.NotPlaying);
     }
-
-    [Fact]
-    public void IsAtStation_True_WhenCircuitIdMatches()
-    {
-        // Arrange
-        var gameState = new GameState
-        {
-            IsAtStation = true
-        };
-
-        // Act & Assert
-        gameState.IsAtStation.Should().BeTrue();
-    }
-
-    [Fact]
-    public void IsAtStation_False_WhenNotAtStation()
-    {
-        // Arrange
-        var gameState = new GameState
-        {
-            IsAtStation = false
-        };
-
-        // Act & Assert
-        gameState.IsAtStation.Should().BeFalse();
-    }
 }

@@ -34,11 +34,6 @@ public class GameState
     ///     ゲーム内の現在時刻(ポーズに追従するため)
     /// </summary>
     public TimeSpan CurrentGameTime { get; init; }
-
-    /// <summary>
-    ///     駅に在線しているかどうか(軌道回路が駅ホームトラックか)
-    /// </summary>
-    public bool IsAtStation { get; init; }
 }
 
 /// <summary>

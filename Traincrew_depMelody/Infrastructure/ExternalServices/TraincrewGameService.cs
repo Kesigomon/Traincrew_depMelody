@@ -160,7 +160,6 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
 
             // 軌道回路情報を取得
             var currentCircuitId = _trackCircuits;
-            var isAtStation = _trackCircuits.Any();
 
             return new()
             {
@@ -174,7 +173,6 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 TrainState = trainStateModel,
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
-                IsAtStation = isAtStation,
                 CurrentGameTime = currentGameTime
             };
         }
@@ -186,8 +184,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 Screen = DomainGameScreen.NotPlaying,
                 CrewType = DomainCrewType.None,
                 CurrentCircuitId = [],
-                CurrentGameTime = TimeSpan.Zero,
-                IsAtStation = false
+                CurrentGameTime = TimeSpan.Zero
             };
         }
     }

@@ -50,7 +50,14 @@ public class MelodyControlService : IMelodyControlService
         // ゲーム状態を取得
         var gameState = await _gameService.GetCurrentGameStateAsync();
 
-        if (!gameState.IsAtStation || gameState.CurrentCircuitId.Count == 0)
+        if (gameState.CurrentCircuitId.Count == 0)
+        {
+            _logger.LogWarning("軌道回路情報がありません");
+            return;
+        }
+
+        var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);
+        if (!isAtStation)
         {
             _logger.LogWarning("駅に在線していません");
             return;
@@ -168,13 +175,14 @@ public class MelodyControlService : IMelodyControlService
     public async Task<bool> IsUiEnabledAsync()
     {
         var gameState = await _gameService.GetCurrentGameStateAsync();
-        return gameState.IsAtStation && gameState.Screen == GameScreen.Playing;
+        var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);
+        return isAtStation && gameState.Screen == GameScreen.Playing;
     }
 
     /// <summary>
     ///     ゲーム状態が変化したときの処理
     /// </summary>
-    private void OnGameStateChanged(object? sender, GameState gameState)
+    private async void OnGameStateChanged(object? sender, GameState gameState)
     {
         // 一時停止状態の処理
         if (gameState.Screen == GameScreen.Pausing)
@@ -183,7 +191,8 @@ public class MelodyControlService : IMelodyControlService
             _audioPlayback.ResumeAll();
 
         // 駅から離れた場合、メロディーを停止
-        if (!gameState.IsAtStation)
+        var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);
+        if (!isAtStation)
             lock (_stateLock)
             {
                 if (_currentState.IsPlaying)

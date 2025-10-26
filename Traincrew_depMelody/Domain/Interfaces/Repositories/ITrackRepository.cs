@@ -28,4 +28,11 @@ public interface ITrackRepository
     ///     CSVを再読み込み(キャッシュクリア)
     /// </summary>
     Task ReloadAsync();
+
+    /// <summary>
+    ///     軌道回路IDのいずれかが駅ホームに存在するか判定
+    /// </summary>
+    /// <param name="circuitIds">判定する軌道回路IDのリスト</param>
+    /// <returns>いずれかの軌道回路が駅ホームに存在する場合true</returns>
+    Task<bool> IsAnyCircuitAtStationAsync(IEnumerable<string> circuitIds);
 }

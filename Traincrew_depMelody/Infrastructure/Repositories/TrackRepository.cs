@@ -68,6 +68,19 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
+    ///     軌道回路IDのいずれかが駅ホームに存在するか判定
+    /// </summary>
+    public async Task<bool> IsAnyCircuitAtStationAsync(IEnumerable<string> circuitIds)
+    {
+        await EnsureLoadedAsync();
+
+        lock (_cacheLock)
+        {
+            return circuitIds.Any(circuitId => _tracks.Any(t => t.ContainsCircuit(circuitId)));
+        }
+    }
+
+    /// <summary>
     ///     初回読み込み確認
     /// </summary>
     private async Task EnsureLoadedAsync()

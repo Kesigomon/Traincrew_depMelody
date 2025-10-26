@@ -101,9 +101,11 @@ public class MelodyControlServiceTests
         _mockGameService.Setup(x => x.GetCurrentGameStateAsync())
             .ReturnsAsync(new GameState
             {
-                IsAtStation = false,
                 CurrentCircuitId = []
             });
+
+        _mockTrackRepo.Setup(x => x.IsAnyCircuitAtStationAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(false);
 
         var service = new MelodyControlService(
             _mockGameService.Object,

@@ -127,7 +127,8 @@ public class AutoModeService : IAutoModeService
             if (gameState.Screen != GameScreen.Playing) return;
 
             // 駅に在線していない場合はリセット
-            if (!gameState.IsAtStation)
+            var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);
+            if (!isAtStation)
             {
                 ResetState();
                 return;
