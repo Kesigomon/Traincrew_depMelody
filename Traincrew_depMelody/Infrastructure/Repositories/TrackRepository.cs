@@ -1,4 +1,5 @@
 using System.Text;
+using System.Windows.Controls.Primitives;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Models;
@@ -27,7 +28,25 @@ public class TrackRepository : ITrackRepository
 
         lock (_cacheLock)
         {
-            return _tracks.FirstOrDefault(t => t.CircuitsMatch(circuitIds));
+            var trackInfo = _tracks.FirstOrDefault(t => t.CircuitsMatch(circuitIds));
+            if (trackInfo == null)
+            {
+                return null;
+            }
+            if (trackInfo.StationName == "館浜")
+            {
+                var trackNumber = int.Parse(trackInfo.TrackNumber);
+                if((trackNumber == 2 && trainClass != "特急") || trackNumber >= 3)
+                {
+                    trackNumber += 1;
+                }
+                return new(
+                    trackInfo.StationName,
+                    trackNumber.ToString(),
+                    trackInfo.CircuitIds
+                );
+            }
+            return trackInfo;
         }
     }
 
