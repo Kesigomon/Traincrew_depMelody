@@ -50,17 +50,17 @@ public class MelodyControlService : IMelodyControlService
         // ゲーム状態を取得
         var gameState = await _gameService.GetCurrentGameStateAsync();
 
-        if (!gameState.IsAtStation || gameState.CurrentCircuitId == null)
+        if (!gameState.IsAtStation || gameState.CurrentCircuitId.Count == 0)
         {
             _logger.LogWarning("駅に在線していません");
             return;
         }
 
-        // 軌道回路から駅・番線を特定
-        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
+        // 軌道回路から駅・番線を特定（複数ある場合は最初の軌道回路を使用）
+        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId.First());
         if (track == null)
         {
-            _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", gameState.CurrentCircuitId);
+            _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", gameState.CurrentCircuitId.First());
             return;
         }
 

@@ -199,9 +199,9 @@ public class AutoModeService : IAutoModeService
         }
 
         // 条件3: 発車時刻ベース
-        if (trainState.DepartureTime != null && gameState.CurrentCircuitId != null)
+        if (trainState.DepartureTime != null && gameState.CurrentCircuitId.Any())
         {
-            var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
+            var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId.First());
             if (track != null)
             {
                 var melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track);

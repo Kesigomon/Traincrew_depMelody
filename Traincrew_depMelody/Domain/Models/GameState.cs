@@ -26,9 +26,9 @@ public class GameState
     public SignalInfo? SignalInfo { get; init; }
 
     /// <summary>
-    ///     現在在線している軌道回路ID
+    ///     現在在線している軌道回路IDのリスト
     /// </summary>
-    public string? CurrentCircuitId { get; init; }
+    public List<string> CurrentCircuitId { get; init; } = [];
 
     /// <summary>
     ///     ゲーム内の現在時刻(ポーズに追従するため)

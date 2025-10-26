@@ -102,7 +102,7 @@ public class MelodyControlServiceTests
             .ReturnsAsync(new GameState
             {
                 IsAtStation = false,
-                CurrentCircuitId = null
+                CurrentCircuitId = []
             });
 
         var service = new MelodyControlService(
