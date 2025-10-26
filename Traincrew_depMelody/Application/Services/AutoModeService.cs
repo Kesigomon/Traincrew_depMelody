@@ -18,7 +18,6 @@ public class AutoModeService : IAutoModeService
     // 自動モードの状態追跡(ゲーム内時刻で記録)
     private TimeSpan? _arrivalTime;
 
-    private Timer? _checkTimer;
     private AutoModeConfig _config = new() { IsEnabled = false };
     private TimeSpan? _doorOpenTime;
     private TimeSpan? _melodyStartTime;
@@ -38,6 +37,9 @@ public class AutoModeService : IAutoModeService
         _audioPlayback = audioPlayback ?? throw new ArgumentNullException(nameof(audioPlayback));
         _trackRepository = trackRepository ?? throw new ArgumentNullException(nameof(trackRepository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // ゲーム状態変化時のイベントハンドリング
+        _gameService.GameStateChanged += OnGameStateChanged;
     }
 
     public bool IsEnabled
@@ -54,7 +56,7 @@ public class AutoModeService : IAutoModeService
     /// <summary>
     ///     自動モードを開始
     /// </summary>
-    public async Task StartAsync()
+    public Task StartAsync()
     {
         lock (_configLock)
         {
@@ -63,28 +65,22 @@ public class AutoModeService : IAutoModeService
 
         _logger.LogInformation("自動モード開始");
 
-        // 16ミリ秒周期でチェック
-        _checkTimer = new(async _ => await CheckAndExecuteAsync(), null, 0, 16);
-
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     /// <summary>
     ///     自動モードを停止
     /// </summary>
-    public async Task StopAsync()
+    public Task StopAsync()
     {
         lock (_configLock)
         {
             _config = _config with { IsEnabled = false };
         }
 
-        _checkTimer?.Dispose();
-        _checkTimer = null;
-
         _logger.LogInformation("自動モード停止");
 
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -110,16 +106,14 @@ public class AutoModeService : IAutoModeService
     }
 
     /// <summary>
-    ///     自動モードの条件チェックと実行
+    ///     ゲーム状態変化時のイベントハンドラ
     /// </summary>
-    private async Task CheckAndExecuteAsync()
+    private async void OnGameStateChanged(object? sender, GameState gameState)
     {
         if (!IsEnabled) return;
 
         try
         {
-            var gameState = await _gameService.GetCurrentGameStateAsync();
-
             // 運転士モード時のみ自動モード有効
             if (gameState.CrewType != CrewType.Driver) return;
 

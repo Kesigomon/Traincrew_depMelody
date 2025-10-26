@@ -66,6 +66,15 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
     private readonly AppConfiguration _config;
     private readonly SemaphoreSlim _fetchDataSemaphore = new(1, 1);
     private readonly ILogger<TraincrewGameService> _logger;
+    private readonly object _cachedStateLock = new();
+
+    private DomainGameState _cachedGameState = new()
+    {
+        Screen = DomainGameScreen.NotPlaying,
+        CrewType = DomainCrewType.None,
+        CurrentCircuitId = [],
+        CurrentGameTime = TimeSpan.Zero
+    };
 
     private List<string> _trackCircuits = [];
     private string _trainNumber = string.Empty;
@@ -111,6 +120,36 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
     }
 
     /// <summary>
+    ///     キャッシュされたゲーム状態を更新
+    /// </summary>
+    public async Task UpdateGameStateAsync()
+    {
+        // データ取得を実行
+        await FetchDataAsync();
+
+        var gameState = await BuildGameStateAsync();
+
+        lock (_cachedStateLock)
+        {
+            _cachedGameState = gameState;
+        }
+
+        // イベント発火
+        GameStateChanged?.Invoke(this, gameState);
+    }
+
+    /// <summary>
+    ///     キャッシュされたゲーム状態を取得
+    /// </summary>
+    public DomainGameState GetCachedGameState()
+    {
+        lock (_cachedStateLock)
+        {
+            return _cachedGameState;
+        }
+    }
+
+    /// <summary>
     ///     現在のゲーム状態を取得
     /// </summary>
     public async Task<DomainGameState> GetCurrentGameStateAsync()
@@ -118,6 +157,14 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
         // データ取得を実行
         await FetchDataAsync();
 
+        return await BuildGameStateAsync();
+    }
+
+    /// <summary>
+    ///     ゲーム状態を構築
+    /// </summary>
+    private Task<DomainGameState> BuildGameStateAsync()
+    {
         try
         {
             // TrainCrewInput.dllから情報を取得
@@ -125,7 +172,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             var trainState = TrainCrewInput.GetTrainState();
             var gameScreen = TrainCrewInput.gameState.gameScreen;
 
-            // ゲーム内時刻を取得 
+            // ゲーム内時刻を取得
             var currentGameTime = trainState.NowTime;
 
             var crewType = DomainCrewType.None;
@@ -161,7 +208,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             // 軌道回路情報を取得
             var currentCircuitId = _trackCircuits;
 
-            return new()
+            return Task.FromResult(new DomainGameState
             {
                 Screen = gameScreen switch
                 {
@@ -174,18 +221,18 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
                 CurrentGameTime = currentGameTime
-            };
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ゲーム状態取得中にエラーが発生");
-            return new()
+            return Task.FromResult(new DomainGameState
             {
                 Screen = DomainGameScreen.NotPlaying,
                 CrewType = DomainCrewType.None,
                 CurrentCircuitId = [],
                 CurrentGameTime = TimeSpan.Zero
-            };
+            });
         }
     }
 

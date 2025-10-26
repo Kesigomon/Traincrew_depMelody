@@ -47,8 +47,8 @@ public class MelodyControlService : IMelodyControlService
             }
         }
 
-        // ゲーム状態を取得
-        var gameState = await _gameService.GetCurrentGameStateAsync();
+        // ゲーム状態を取得（キャッシュから）
+        var gameState = _gameService.GetCachedGameState();
 
         if (gameState.CurrentCircuitId.Count == 0)
         {
@@ -76,8 +76,8 @@ public class MelodyControlService : IMelodyControlService
         // メロディー再生
         await _audioPlayback.PlayMelodyAsync(track);
 
-        // 状態更新
-        var currentGameState = await _gameService.GetCurrentGameStateAsync();
+        // 状態更新（キャッシュから取得）
+        var currentGameState = _gameService.GetCachedGameState();
         lock (_stateLock)
         {
             _currentState = _currentState.With(
@@ -128,13 +128,13 @@ public class MelodyControlService : IMelodyControlService
         StateChanged?.Invoke(this, _currentState);
 
         // ゲーム時刻で1秒待機
-        var gameState = await _gameService.GetCurrentGameStateAsync();
+        var gameState = _gameService.GetCachedGameState();
         var startTime = gameState.CurrentGameTime;
         var targetTime = startTime.Add(TimeSpan.FromSeconds(1.0));
 
         while (true)
         {
-            gameState = await _gameService.GetCurrentGameStateAsync();
+            gameState = _gameService.GetCachedGameState();
 
             // ゲーム時刻が目標時刻に到達したら終了
             if (gameState.CurrentGameTime >= targetTime) break;
@@ -143,7 +143,7 @@ public class MelodyControlService : IMelodyControlService
         }
 
         // ドア閉め案内再生
-        gameState = await _gameService.GetCurrentGameStateAsync();
+        gameState = _gameService.GetCachedGameState();
         var isInbound = gameState.TrainState?.IsInbound() ?? false;
 
         _logger.LogInformation("ドア閉め案内再生: {TrackTrackNumber}番線 ({上り})", track.TrackNumber, isInbound ? "上り" : "下り");
@@ -174,7 +174,7 @@ public class MelodyControlService : IMelodyControlService
     /// </summary>
     public async Task<bool> IsUiEnabledAsync()
     {
-        var gameState = await _gameService.GetCurrentGameStateAsync();
+        var gameState = _gameService.GetCachedGameState();
         var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);
         return isAtStation && gameState.Screen == GameScreen.Playing;
     }

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Threading;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces;
 using Traincrew_depMelody.Domain.Interfaces.Repositories;
@@ -17,6 +18,7 @@ public partial class MainWindow : Window
     private readonly ITrackRepository _trackRepository;
 
     private GameState _currentGameState = new();
+    private DispatcherTimer? _updateTimer;
 
     public MainWindow(
         IMelodyControlService melodyControl,
@@ -45,6 +47,15 @@ public partial class MainWindow : Window
         try
         {
             await _gameService.ConnectAsync();
+
+            // 16ms周期でゲーム状態を更新するタイマーを開始
+            _updateTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(16)
+            };
+            _updateTimer.Tick += async (s, args) => await UpdateGameStateAsync();
+            _updateTimer.Start();
+
             _logger.LogInformation("アプリケーション起動完了");
         }
         catch (Exception ex)
@@ -56,8 +67,23 @@ public partial class MainWindow : Window
 
     private async void OnClosing(object? sender, CancelEventArgs e)
     {
+        _updateTimer?.Stop();
+        _updateTimer = null;
+
         await _gameService.DisconnectAsync();
         await _autoMode.StopAsync();
+    }
+
+    private async Task UpdateGameStateAsync()
+    {
+        try
+        {
+            await _gameService.UpdateGameStateAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ゲーム状態更新エラー");
+        }
     }
 
     private async void OnButton_Click(object sender, RoutedEventArgs e)

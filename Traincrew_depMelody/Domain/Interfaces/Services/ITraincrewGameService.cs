@@ -23,9 +23,19 @@ public interface ITraincrewGameService
     Task DisconnectAsync();
 
     /// <summary>
-    ///     現在のゲーム状態を取得
+    ///     現在のゲーム状態を取得（データ取得を実行）
     /// </summary>
     Task<GameState> GetCurrentGameStateAsync();
+
+    /// <summary>
+    ///     キャッシュされたゲーム状態を更新（データ取得を実行）
+    /// </summary>
+    Task UpdateGameStateAsync();
+
+    /// <summary>
+    ///     キャッシュされたゲーム状態を取得（データ取得なし）
+    /// </summary>
+    GameState GetCachedGameState();
 
     /// <summary>
     ///     ゲーム状態が変化したときのイベント
