@@ -21,13 +21,13 @@ public class TrackRepository : ITrackRepository
     /// <summary>
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
-    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(string circuitId)
+    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds)
     {
         await EnsureLoadedAsync();
 
         lock (_cacheLock)
         {
-            return _tracks.FirstOrDefault(t => t.ContainsCircuit(circuitId));
+            return _tracks.FirstOrDefault(t => t.CircuitsMatch(circuitIds));
         }
     }
 
@@ -45,12 +45,8 @@ public class TrackRepository : ITrackRepository
     /// </summary>
     public async Task<bool> IsAnyCircuitAtStationAsync(IEnumerable<string> circuitIds)
     {
-        await EnsureLoadedAsync();
-
-        lock (_cacheLock)
-        {
-            return circuitIds.Any(circuitId => _tracks.Any(t => t.ContainsCircuit(circuitId)));
-        }
+        var track = await FindTrackByCircuitIdAsync(circuitIds);
+        return track != null;
     }
 
     /// <summary>

@@ -62,11 +62,11 @@ public class MelodyControlService : IMelodyControlService
             return;
         }
 
-        // 軌道回路から駅・番線を特定（複数ある場合は最初の軌道回路を使用）
-        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId.First());
+        // 軌道回路から駅・番線を特定（集合比較）
+        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
         if (track == null)
         {
-            _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", gameState.CurrentCircuitId.First());
+            _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", string.Join(", ", gameState.CurrentCircuitId));
             return;
         }
 

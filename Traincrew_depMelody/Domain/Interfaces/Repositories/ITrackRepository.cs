@@ -10,9 +10,9 @@ public interface ITrackRepository
     /// <summary>
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
-    /// <param name="circuitId">軌道回路ID</param>
+    /// <param name="circuitIds">軌道回路IDのリスト（集合比較で一致するものを検索）</param>
     /// <returns>該当する駅・番線情報、見つからない場合はnull</returns>
-    Task<TrackInfo?> FindTrackByCircuitIdAsync(string circuitId);
+    Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds);
 
     /// <summary>
     ///     CSVを再読み込み(キャッシュクリア)

@@ -39,6 +39,16 @@ public class TrackInfo
     }
 
     /// <summary>
+    ///     指定された軌道回路IDの集合がこの番線の軌道回路IDと一致するか判定
+    /// </summary>
+    public bool CircuitsMatch(IEnumerable<string> circuitIds)
+    {
+        var circuitSet = new HashSet<string>(circuitIds);
+        var trackCircuitSet = new HashSet<string>(CircuitIds);
+        return circuitSet.SetEquals(trackCircuitSet);
+    }
+
+    /// <summary>
     ///     駅・番線の識別キーを取得(例: "館浜_1")
     /// </summary>
     public string GetKey()
