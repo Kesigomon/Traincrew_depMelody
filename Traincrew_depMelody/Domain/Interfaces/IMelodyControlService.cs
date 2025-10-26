@@ -26,9 +26,4 @@ public interface IMelodyControlService
     ///     UI操作が有効かどうか(駅に在線しているか、一時停止中でないか)
     /// </summary>
     Task<bool> IsUiEnabledAsync();
-
-    /// <summary>
-    ///     メロディー状態が変化したときのイベント
-    /// </summary>
-    event EventHandler<MelodyState>? StateChanged;
 }

@@ -38,7 +38,6 @@ public partial class MainWindow : Window
         Loaded += OnLoaded;
         Closing += OnClosing;
 
-        _melodyControl.StateChanged += OnMelodyStateChanged;
         _gameService.GameStateChanged += OnGameStateChanged;
     }
 
@@ -112,14 +111,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnMelodyStateChanged(object? sender, MelodyState state)
-    {
-        // UIスレッドで更新
-        Dispatcher.Invoke(() =>
-        {
-            UpdateButtonStates();
-        });
-    }
+
 
     private void OnGameStateChanged(object? sender, GameState state)
     {

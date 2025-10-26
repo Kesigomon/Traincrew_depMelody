@@ -21,6 +21,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Include="profiles\default.csv" CopyToPublishDirectory="PreserveNewest"/>
+        <None Include="stations\stations.csv" CopyToPublishDirectory="PreserveNewest"/>
         <Folder Include="Audio\Announcement\"/>
         <Folder Include="Audio\Melody\"/>
     </ItemGroup>

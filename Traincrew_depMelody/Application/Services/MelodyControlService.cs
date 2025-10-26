@@ -31,8 +31,6 @@ public class MelodyControlService : IMelodyControlService
         _gameService.GameStateChanged += OnGameStateChanged;
     }
 
-    public event EventHandler<MelodyState>? StateChanged;
-
     /// <summary>
     ///     メロディー再生を開始
     /// </summary>
@@ -87,8 +85,6 @@ public class MelodyControlService : IMelodyControlService
                 doorCloseAnnouncementPlayed: false
             );
         }
-
-        StateChanged?.Invoke(this, _currentState);
     }
 
     /// <summary>
@@ -125,8 +121,6 @@ public class MelodyControlService : IMelodyControlService
             _currentState = _currentState.With(false);
         }
 
-        StateChanged?.Invoke(this, _currentState);
-
         // ゲーム時刻で1秒待機
         var gameState = _gameService.GetCachedGameState();
         var startTime = gameState.CurrentGameTime;
@@ -154,8 +148,6 @@ public class MelodyControlService : IMelodyControlService
         {
             _currentState = _currentState.With(doorCloseAnnouncementPlayed: true);
         }
-
-        StateChanged?.Invoke(this, _currentState);
     }
 
     /// <summary>
@@ -200,7 +192,6 @@ public class MelodyControlService : IMelodyControlService
                     _logger.LogInformation("駅から離れたため、メロディーを停止します");
                     _audioPlayback.StopMelody();
                     _currentState = _currentState.With(false);
-                    StateChanged?.Invoke(this, _currentState);
                 }
             }
     }
