@@ -15,6 +15,7 @@ public class MelodyControlService : IMelodyControlService
     private readonly ITrackRepository _trackRepository;
 
     private MelodyState _currentState = new() { IsPlaying = false };
+    private GameScreen _previousScreen = GameScreen.NotPlaying;
 
     public MelodyControlService(
         ITraincrewGameService gameService,
@@ -178,9 +179,17 @@ public class MelodyControlService : IMelodyControlService
     {
         // 一時停止状態の処理
         if (gameState.Screen == GameScreen.Pausing)
+        {
             _audioPlayback.PauseAll();
-        else
+        }
+        else if (_previousScreen == GameScreen.Pausing && gameState.Screen == GameScreen.Playing)
+        {
+            // Pausing → Playing の遷移時のみResumeを呼び出す
             _audioPlayback.ResumeAll();
+        }
+
+        // 前回のスクリーン状態を保存
+        _previousScreen = gameState.Screen;
 
         // 駅から離れた場合、メロディーを停止
         var isAtStation = await _trackRepository.IsAnyCircuitAtStationAsync(gameState.CurrentCircuitId);

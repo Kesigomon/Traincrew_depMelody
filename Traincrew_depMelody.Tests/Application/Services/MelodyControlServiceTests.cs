@@ -137,4 +137,186 @@ public class MelodyControlServiceTests
         state.Should().NotBeNull();
         state.IsPlaying.Should().BeFalse();
     }
+
+    [Fact]
+    public async Task OnGameStateChanged_PausingToPausing_DoesNotCallResumeAll()
+    {
+        // Arrange
+        _mockGameService.Setup(x => x.GetCachedGameState())
+            .Returns(new GameState
+            {
+                Screen = GameScreen.Pausing,
+                CurrentCircuitId = new List<string>()
+            });
+
+        _mockTrackRepo.Setup(x => x.IsAnyCircuitAtStationAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(false);
+
+        var service = new MelodyControlService(
+            _mockGameService.Object,
+            _mockTrackRepo.Object,
+            _mockAudioPlayback.Object,
+            _mockLogger.Object);
+
+        // Act
+        // 最初のPausing状態
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Pausing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        _mockAudioPlayback.Invocations.Clear();
+
+        // 2回目のPausing状態（状態変化なし）
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Pausing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        // Assert
+        _mockAudioPlayback.Verify(x => x.ResumeAll(), Times.Never);
+        _mockAudioPlayback.Verify(x => x.PauseAll(), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnGameStateChanged_PlayingToPlaying_DoesNotCallResumeAll()
+    {
+        // Arrange
+        _mockGameService.Setup(x => x.GetCachedGameState())
+            .Returns(new GameState
+            {
+                Screen = GameScreen.Playing,
+                CurrentCircuitId = new List<string>()
+            });
+
+        _mockTrackRepo.Setup(x => x.IsAnyCircuitAtStationAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(false);
+
+        var service = new MelodyControlService(
+            _mockGameService.Object,
+            _mockTrackRepo.Object,
+            _mockAudioPlayback.Object,
+            _mockLogger.Object);
+
+        // Act
+        // 最初のPlaying状態
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Playing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        _mockAudioPlayback.Invocations.Clear();
+
+        // 2回目のPlaying状態（状態変化なし）
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Playing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        // Assert
+        _mockAudioPlayback.Verify(x => x.ResumeAll(), Times.Never);
+        _mockAudioPlayback.Verify(x => x.PauseAll(), Times.Never);
+    }
+
+    [Fact]
+    public async Task OnGameStateChanged_PausingToPlaying_CallsResumeAll()
+    {
+        // Arrange
+        _mockGameService.Setup(x => x.GetCachedGameState())
+            .Returns(new GameState
+            {
+                Screen = GameScreen.Playing,
+                CurrentCircuitId = new List<string>()
+            });
+
+        _mockTrackRepo.Setup(x => x.IsAnyCircuitAtStationAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(false);
+
+        var service = new MelodyControlService(
+            _mockGameService.Object,
+            _mockTrackRepo.Object,
+            _mockAudioPlayback.Object,
+            _mockLogger.Object);
+
+        // Act
+        // 最初にPausing状態にする
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Pausing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        _mockAudioPlayback.Invocations.Clear();
+
+        // Playing状態に遷移
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Playing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        // Assert
+        _mockAudioPlayback.Verify(x => x.ResumeAll(), Times.Once);
+    }
+
+    [Fact]
+    public async Task OnGameStateChanged_PlayingToPausing_CallsPauseAll()
+    {
+        // Arrange
+        _mockGameService.Setup(x => x.GetCachedGameState())
+            .Returns(new GameState
+            {
+                Screen = GameScreen.Pausing,
+                CurrentCircuitId = new List<string>()
+            });
+
+        _mockTrackRepo.Setup(x => x.IsAnyCircuitAtStationAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(false);
+
+        var service = new MelodyControlService(
+            _mockGameService.Object,
+            _mockTrackRepo.Object,
+            _mockAudioPlayback.Object,
+            _mockLogger.Object);
+
+        // Act
+        // 最初にPlaying状態にする
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Playing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        _mockAudioPlayback.Invocations.Clear();
+
+        // Pausing状態に遷移
+        _mockGameService.Raise(x => x.GameStateChanged += null, this, new GameState
+        {
+            Screen = GameScreen.Pausing,
+            CurrentCircuitId = new List<string>()
+        });
+
+        await Task.Delay(100); // イベント処理待機
+
+        // Assert
+        _mockAudioPlayback.Verify(x => x.PauseAll(), Times.Once);
+    }
 }
