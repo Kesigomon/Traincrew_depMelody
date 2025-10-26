@@ -220,7 +220,8 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 TrainState = trainStateModel,
                 SignalInfo = signalInfo,
                 CurrentCircuitId = currentCircuitId,
-                CurrentGameTime = currentGameTime
+                CurrentGameTime = currentGameTime,
+                TrainClass = trainState.Class
             });
         }
         catch (Exception ex)

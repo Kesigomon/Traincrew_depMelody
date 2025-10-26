@@ -37,7 +37,7 @@ public class TrackRepositoryTests : IDisposable
         var repository = new TrackRepository(_config, _mockLogger.Object);
 
         // Act
-        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_01_1", "TC_TATEHAMA_01_2" });
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_01_1", "TC_TATEHAMA_01_2" }, "普通");
 
         // Assert
         track.Should().NotBeNull();
@@ -52,7 +52,7 @@ public class TrackRepositoryTests : IDisposable
         var repository = new TrackRepository(_config, _mockLogger.Object);
 
         // Act
-        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_NONEXISTENT" });
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_NONEXISTENT" }, "普通");
 
         // Assert
         track.Should().BeNull();

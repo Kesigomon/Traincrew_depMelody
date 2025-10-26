@@ -34,6 +34,11 @@ public class GameState
     ///     ゲーム内の現在時刻(ポーズに追従するため)
     /// </summary>
     public TimeSpan CurrentGameTime { get; init; }
+
+    /// <summary>
+    ///     列車種別（普通、快速、特急など）
+    /// </summary>
+    public string TrainClass { get; init; } = "";
 }
 
 /// <summary>

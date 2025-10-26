@@ -63,7 +63,7 @@ public class MelodyControlService : IMelodyControlService
         }
 
         // 軌道回路から駅・番線を特定（集合比較）
-        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId);
+        var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId, gameState.TrainClass);
         if (track == null)
         {
             _logger.LogWarning("軌道回路ID '{GameStateCurrentCircuitId}' に対応する駅・番線が見つかりません", string.Join(", ", gameState.CurrentCircuitId));

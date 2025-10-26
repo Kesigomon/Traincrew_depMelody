@@ -21,7 +21,7 @@ public class TrackRepository : ITrackRepository
     /// <summary>
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
-    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds)
+    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds, string trainClass)
     {
         await EnsureLoadedAsync();
 
@@ -45,7 +45,7 @@ public class TrackRepository : ITrackRepository
     /// </summary>
     public async Task<bool> IsAnyCircuitAtStationAsync(IEnumerable<string> circuitIds)
     {
-        var track = await FindTrackByCircuitIdAsync(circuitIds);
+        var track = await FindTrackByCircuitIdAsync(circuitIds, "普通");
         return track != null;
     }
 
