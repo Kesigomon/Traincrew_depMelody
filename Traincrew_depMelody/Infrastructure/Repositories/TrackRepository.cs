@@ -19,19 +19,6 @@ public class TrackRepository : ITrackRepository
     }
 
     /// <summary>
-    ///     全ての駅・番線情報を取得
-    /// </summary>
-    public async Task<IEnumerable<TrackInfo>> GetAllTracksAsync()
-    {
-        await EnsureLoadedAsync();
-
-        lock (_cacheLock)
-        {
-            return _tracks.ToList();
-        }
-    }
-
-    /// <summary>
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
     public async Task<TrackInfo?> FindTrackByCircuitIdAsync(string circuitId)
@@ -41,20 +28,6 @@ public class TrackRepository : ITrackRepository
         lock (_cacheLock)
         {
             return _tracks.FirstOrDefault(t => t.ContainsCircuit(circuitId));
-        }
-    }
-
-    /// <summary>
-    ///     駅名と番線から駅・番線情報を検索
-    /// </summary>
-    public async Task<TrackInfo?> FindTrackByStationAndNumberAsync(string stationName, string trackNumber)
-    {
-        await EnsureLoadedAsync();
-
-        lock (_cacheLock)
-        {
-            return _tracks.FirstOrDefault(t =>
-                t.StationName == stationName && t.TrackNumber == trackNumber);
         }
     }
 

@@ -31,20 +31,6 @@ public class TrackRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task GetAllTracksAsync_ValidCsv_ReturnsAllTracks()
-    {
-        // Arrange
-        var repository = new TrackRepository(_config, _mockLogger.Object);
-
-        // Act
-        var tracks = await repository.GetAllTracksAsync();
-
-        // Assert
-        tracks.Should().NotBeNull();
-        tracks.Should().HaveCountGreaterOrEqualTo(3);
-    }
-
-    [Fact]
     public async Task FindTrackByCircuitIdAsync_ExistingCircuit_ReturnsTrack()
     {
         // Arrange
@@ -67,34 +53,6 @@ public class TrackRepositoryTests : IDisposable
 
         // Act
         var track = await repository.FindTrackByCircuitIdAsync("TC_NONEXISTENT");
-
-        // Assert
-        track.Should().BeNull();
-    }
-
-    [Fact]
-    public async Task FindTrackByStationAndNumberAsync_ExistingTrack_ReturnsTrack()
-    {
-        // Arrange
-        var repository = new TrackRepository(_config, _mockLogger.Object);
-
-        // Act
-        var track = await repository.FindTrackByStationAndNumberAsync("館浜", "1");
-
-        // Assert
-        track.Should().NotBeNull();
-        track!.StationName.Should().Be("館浜");
-        track.TrackNumber.Should().Be("1");
-    }
-
-    [Fact]
-    public async Task FindTrackByStationAndNumberAsync_NonExistingTrack_ReturnsNull()
-    {
-        // Arrange
-        var repository = new TrackRepository(_config, _mockLogger.Object);
-
-        // Act
-        var track = await repository.FindTrackByStationAndNumberAsync("存在しない駅", "1");
 
         // Assert
         track.Should().BeNull();
