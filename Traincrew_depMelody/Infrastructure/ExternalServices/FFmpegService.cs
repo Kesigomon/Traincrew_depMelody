@@ -53,20 +53,20 @@ public class FFmpegService : IFFmpegService
             // "Duration: 00:00:35.50" のような行をパース
             var match = Regex.Match(output, @"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})");
 
-            if (match.Success)
+            if (!match.Success)
             {
-                var hours = int.Parse(match.Groups[1].Value);
-                var minutes = int.Parse(match.Groups[2].Value);
-                var seconds = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
-
-                var totalSeconds = hours * 3600 + minutes * 60 + seconds;
-
-                _logger.LogDebug("音声ファイル長: {TotalSeconds}秒 ({FilePath})", totalSeconds, filePath);
-                return totalSeconds;
+                _logger.LogWarning("音声ファイル長の取得に失敗: {FilePath}", filePath);
+                return null;
             }
 
-            _logger.LogWarning("音声ファイル長の取得に失敗: {FilePath}", filePath);
-            return null;
+            var hours = int.Parse(match.Groups[1].Value);
+            var minutes = int.Parse(match.Groups[2].Value);
+            var seconds = double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
+
+            var totalSeconds = hours * 3600 + minutes * 60 + seconds;
+
+            _logger.LogDebug("音声ファイル長: {TotalSeconds}秒 ({FilePath})", totalSeconds, filePath);
+            return totalSeconds;
         }
         catch (Exception ex)
         {
