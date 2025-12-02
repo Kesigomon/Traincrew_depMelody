@@ -192,7 +192,9 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 IsDoorsOpen = !trainState.AllClose,
                 TrainNumber = trainState.diaName,
                 VehicleTypes = trainState.CarStates.Select(c => c.CarModel).ToList(),
-                DepartureTime = null // TrainCrewには発車時刻の情報がない
+                DepartureTime = trainState.stationList.Count <= trainState.nowStaIndex
+                    ? trainState.stationList[trainState.nowStaIndex].DepTime
+                    : null
             };
 
             var signalAspect = TrainCrewInput.signals.Any(s => s.phase != "R")
