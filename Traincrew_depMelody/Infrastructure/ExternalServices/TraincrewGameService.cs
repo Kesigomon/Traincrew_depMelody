@@ -192,7 +192,7 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
                 IsDoorsOpen = !trainState.AllClose,
                 TrainNumber = trainState.diaName,
                 VehicleTypes = trainState.CarStates.Select(c => c.CarModel).ToList(),
-                DepartureTime = trainState.stationList.Count <= trainState.nowStaIndex
+                DepartureTime = trainState.stationList.Count > trainState.nowStaIndex
                     ? trainState.stationList[trainState.nowStaIndex].DepTime
                     : null
             };
