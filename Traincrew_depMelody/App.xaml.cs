@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Application.Services;
@@ -51,7 +52,16 @@ public partial class App : System.Windows.Application
         });
 
         // Configuration
-        services.AddSingleton<AppConfiguration>();
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+            .Build();
+
+        var appConfig = configuration.Get<AppConfiguration>() ?? new AppConfiguration();
+        services.AddSingleton(appConfig);
+
+        var autoModeConfig = configuration.GetSection("AutoModeConfig").Get<AutoModeConfig>() ?? new AutoModeConfig();
+        services.AddSingleton(autoModeConfig);
 
         // Presentation Layer
         services.AddSingleton<MainWindow>();

@@ -97,7 +97,7 @@ public class AudioProfileRepository : IAudioProfileRepository
 
                 var values = line.Split(',');
 
-                if (values.Length < 3)
+                if (values.Length < 4)
                 {
                     _logger.LogWarning("不正なCSV行をスキップ: {Line}", line);
                     continue;
@@ -105,15 +105,16 @@ public class AudioProfileRepository : IAudioProfileRepository
 
                 var stationName = values[0].Trim();
                 var trackNumber = values[1].Trim();
-                var melodyPath = values[2].Trim();
-                var doorDownPath = values.Length > 3 ? values[3].Trim() : null;
-                var doorUpPath = values.Length > 4 ? values[4].Trim() : null;
+                var melodyDownPath = values[2].Trim();
+                var melodyUpPath = values[3].Trim();
+                var doorDownPath = values.Length > 4 ? values[4].Trim() : null;
+                var doorUpPath = values.Length > 5 ? values[5].Trim() : null;
 
                 // 空文字列はnullに変換
                 if (string.IsNullOrEmpty(doorDownPath)) doorDownPath = null;
                 if (string.IsNullOrEmpty(doorUpPath)) doorUpPath = null;
 
-                var profile = new AudioProfile(stationName, trackNumber, melodyPath, doorDownPath, doorUpPath);
+                var profile = new AudioProfile(stationName, trackNumber, melodyDownPath, melodyUpPath, doorDownPath, doorUpPath);
                 profiles[profile.GetKey()] = profile;
             }
 

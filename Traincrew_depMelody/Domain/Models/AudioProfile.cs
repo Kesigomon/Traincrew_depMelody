@@ -11,13 +11,15 @@ public class AudioProfile
     public AudioProfile(
         string stationName,
         string trackNumber,
-        string melodyFilePath,
+        string melodyDownFilePath,
+        string melodyUpFilePath,
         string? doorCloseAnnouncementDownFilePath = null,
         string? doorCloseAnnouncementUpFilePath = null)
     {
         StationName = stationName ?? throw new ArgumentNullException(nameof(stationName));
         TrackNumber = trackNumber ?? throw new ArgumentNullException(nameof(trackNumber));
-        MelodyFilePath = melodyFilePath ?? throw new ArgumentNullException(nameof(melodyFilePath));
+        MelodyDownFilePath = melodyDownFilePath ?? throw new ArgumentNullException(nameof(melodyDownFilePath));
+        MelodyUpFilePath = melodyUpFilePath ?? throw new ArgumentNullException(nameof(melodyUpFilePath));
         DoorCloseAnnouncementDownFilePath = doorCloseAnnouncementDownFilePath;
         DoorCloseAnnouncementUpFilePath = doorCloseAnnouncementUpFilePath;
     }
@@ -33,9 +35,14 @@ public class AudioProfile
     public string TrackNumber { get; init; }
 
     /// <summary>
-    ///     発車メロディーファイルパス
+    ///     発車メロディーファイルパス(下り)
     /// </summary>
-    public string MelodyFilePath { get; init; }
+    public string MelodyDownFilePath { get; init; }
+
+    /// <summary>
+    ///     発車メロディーファイルパス(上り)
+    /// </summary>
+    public string MelodyUpFilePath { get; init; }
 
     /// <summary>
     ///     ドア閉め案内ファイルパス(下り)
@@ -53,6 +60,14 @@ public class AudioProfile
     public string GetKey()
     {
         return $"{StationName}_{TrackNumber}";
+    }
+
+    /// <summary>
+    ///     指定方向のメロディーファイルパスを取得
+    /// </summary>
+    public string GetMelodyPath(bool isInbound)
+    {
+        return isInbound ? MelodyUpFilePath : MelodyDownFilePath;
     }
 
     /// <summary>

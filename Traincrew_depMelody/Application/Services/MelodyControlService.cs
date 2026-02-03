@@ -70,10 +70,12 @@ public class MelodyControlService : IMelodyControlService
             return;
         }
 
-        _logger.LogInformation("メロディー再生開始: {TrackStationName} {TrackTrackNumber}番線", track.StationName, track.TrackNumber);
+        var isInbound = gameState.TrainState?.IsInbound() ?? false;
+
+        _logger.LogInformation("メロディー再生開始: {TrackStationName} {TrackTrackNumber}番線 ({Direction})", track.StationName, track.TrackNumber, isInbound ? "上り" : "下り");
 
         // メロディー再生
-        await _audioPlayback.PlayMelodyAsync(track);
+        await _audioPlayback.PlayMelodyAsync(track, isInbound);
 
         // 状態更新（キャッシュから取得）
         var currentGameState = _gameService.GetCachedGameState();

@@ -45,7 +45,7 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// <summary>
     ///     メロディーを再生(ループ)
     /// </summary>
-    public async Task PlayMelodyAsync(TrackInfo track)
+    public async Task PlayMelodyAsync(TrackInfo track, bool isInbound)
     {
         // 音声プロファイルから実際のファイルパスを取得
         var profile = await _audioProfileRepository.FindProfileAsync(track.StationName, track.TrackNumber);
@@ -57,7 +57,7 @@ public class AudioPlaybackService : IAudioPlaybackService
             return;
         }
 
-        var melodyPath = profile.MelodyFilePath;
+        var melodyPath = profile.GetMelodyPath(isInbound);
 
         if (!File.Exists(melodyPath))
         {
@@ -151,16 +151,16 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// <summary>
     ///     メロディーの長さを取得(秒)
     /// </summary>
-    public async Task<double> GetMelodyDurationAsync(TrackInfo track)
+    public async Task<double> GetMelodyDurationAsync(TrackInfo track, bool isInbound)
     {
         // 音声プロファイルから実際のファイルパスを取得
         var profile = await _audioProfileRepository.FindProfileAsync(track.StationName, track.TrackNumber);
 
         string melodyPath;
-        if (profile == null || !File.Exists(profile.MelodyFilePath))
+        if (profile == null || !File.Exists(profile.GetMelodyPath(isInbound)))
             melodyPath = GetDefaultMelodyPath();
         else
-            melodyPath = profile.MelodyFilePath;
+            melodyPath = profile.GetMelodyPath(isInbound);
 
         var duration = await _ffmpegService.GetAudioDurationAsync(melodyPath);
         return duration ?? 30.0; // デフォルト30秒

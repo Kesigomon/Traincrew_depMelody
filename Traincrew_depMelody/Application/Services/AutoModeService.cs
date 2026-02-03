@@ -18,7 +18,7 @@ public class AutoModeService : IAutoModeService
     // 自動モードの状態追跡(ゲーム内時刻で記録)
     private TimeSpan? _arrivalTime;
 
-    private AutoModeConfig _config = new() { IsEnabled = false };
+    private AutoModeConfig _config;
     private TimeSpan? _doorOpenTime;
     private TimeSpan? _melodyStartTime;
     private bool _melodyTriggered;
@@ -30,12 +30,14 @@ public class AutoModeService : IAutoModeService
         IMelodyControlService melodyControl,
         IAudioPlaybackService audioPlayback,
         ITrackRepository trackRepository,
+        AutoModeConfig initialConfig,
         ILogger<AutoModeService> logger)
     {
         _gameService = gameService ?? throw new ArgumentNullException(nameof(gameService));
         _melodyControl = melodyControl ?? throw new ArgumentNullException(nameof(melodyControl));
         _audioPlayback = audioPlayback ?? throw new ArgumentNullException(nameof(audioPlayback));
         _trackRepository = trackRepository ?? throw new ArgumentNullException(nameof(trackRepository));
+        _config = initialConfig ?? throw new ArgumentNullException(nameof(initialConfig));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // ゲーム状態変化時のイベントハンドリング
@@ -199,7 +201,8 @@ public class AutoModeService : IAutoModeService
             var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId, gameState.TrainClass);
             if (track != null)
             {
-                var melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track);
+                var isInbound = trainState.IsInbound();
+                var melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track, isInbound);
                 var margin = config.GetMarginForVehicle(trainState);
                 var totalOffset = melodyDuration + config.DoorCloseAnnouncementDuration + margin;
 

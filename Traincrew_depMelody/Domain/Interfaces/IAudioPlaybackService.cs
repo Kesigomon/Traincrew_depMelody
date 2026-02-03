@@ -10,7 +10,7 @@ public interface IAudioPlaybackService
     /// <summary>
     ///     メロディーを再生(ループ)
     /// </summary>
-    Task PlayMelodyAsync(TrackInfo track);
+    Task PlayMelodyAsync(TrackInfo track, bool isInbound);
 
     /// <summary>
     ///     メロディーを停止
@@ -35,5 +35,5 @@ public interface IAudioPlaybackService
     /// <summary>
     ///     メロディーの長さを取得(秒)
     /// </summary>
-    Task<double> GetMelodyDurationAsync(TrackInfo track);
+    Task<double> GetMelodyDurationAsync(TrackInfo track, bool isInbound);
 }
