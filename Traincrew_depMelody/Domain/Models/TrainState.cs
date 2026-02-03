@@ -54,6 +54,6 @@ public class TrainState
     /// </summary>
     public bool IsLimitedExpressType()
     {
-        return VehicleTypes.Any(vt => vt.StartsWith("50000"));
+        return VehicleTypes.Count > 0 && VehicleTypes[0].StartsWith("50000");
     }
 }

@@ -11,16 +11,18 @@ public class AudioProfileTests
         // Arrange
         var stationName = "館浜";
         var trackNumber = "1";
-        var melodyPath = "path.mp3";
+        var melodyDownPath = "down.mp3";
+        var melodyUpPath = "up.mp3";
 
         // Act
-        var profile = new AudioProfile(stationName, trackNumber, melodyPath);
+        var profile = new AudioProfile(stationName, trackNumber, melodyDownPath, melodyUpPath);
 
         // Assert
         profile.Should().NotBeNull();
         profile.StationName.Should().Be(stationName);
         profile.TrackNumber.Should().Be(trackNumber);
-        profile.MelodyFilePath.Should().Be(melodyPath);
+        profile.MelodyDownFilePath.Should().Be(melodyDownPath);
+        profile.MelodyUpFilePath.Should().Be(melodyUpPath);
     }
 
     [Fact]
@@ -29,10 +31,9 @@ public class AudioProfileTests
         // Arrange
         string? stationName = null;
         var trackNumber = "1";
-        var melodyPath = "path.mp3";
 
         // Act
-        Action act = () => new AudioProfile(stationName!, trackNumber, melodyPath);
+        Action act = () => new AudioProfile(stationName!, trackNumber, "down.mp3", "up.mp3");
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -45,10 +46,9 @@ public class AudioProfileTests
         // Arrange
         var stationName = "館浜";
         string? trackNumber = null;
-        var melodyPath = "path.mp3";
 
         // Act
-        Action act = () => new AudioProfile(stationName, trackNumber!, melodyPath);
+        Action act = () => new AudioProfile(stationName, trackNumber!, "down.mp3", "up.mp3");
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
@@ -56,26 +56,26 @@ public class AudioProfileTests
     }
 
     [Fact]
-    public void Constructor_NullMelodyPath_ThrowsException()
+    public void Constructor_NullMelodyDownFilePath_ThrowsException()
     {
         // Arrange
         var stationName = "館浜";
         var trackNumber = "1";
-        string? melodyPath = null;
+        string? melodyDownPath = null;
 
         // Act
-        Action act = () => new AudioProfile(stationName, trackNumber, melodyPath!);
+        Action act = () => new AudioProfile(stationName, trackNumber, melodyDownPath!, "up.mp3");
 
         // Assert
         act.Should().Throw<ArgumentNullException>()
-            .WithParameterName("melodyFilePath");
+            .WithParameterName("melodyDownFilePath");
     }
 
     [Fact]
     public void GetKey_ValidData_ReturnsFormattedKey()
     {
         // Arrange
-        var profile = new AudioProfile("館浜", "1", "path.mp3");
+        var profile = new AudioProfile("館浜", "1", "down.mp3", "up.mp3");
 
         // Act
         var key = profile.GetKey();
@@ -88,29 +88,29 @@ public class AudioProfileTests
     public void GetDoorCloseAnnouncementPath_Inbound_ReturnsUpPath()
     {
         // Arrange
-        var upPath = "announce_up.mp3";
-        var downPath = "announce_down.mp3";
-        var profile = new AudioProfile("館浜", "1", "melody.mp3", downPath, upPath);
+        var announceUpPath = "announce_up.mp3";
+        var announceDownPath = "announce_down.mp3";
+        var profile = new AudioProfile("館浜", "1", "melody_down.mp3", "melody_up.mp3", announceDownPath, announceUpPath);
 
         // Act
         var result = profile.GetDoorCloseAnnouncementPath(true);
 
         // Assert
-        result.Should().Be(upPath);
+        result.Should().Be(announceUpPath);
     }
 
     [Fact]
     public void GetDoorCloseAnnouncementPath_Outbound_ReturnsDownPath()
     {
         // Arrange
-        var upPath = "announce_up.mp3";
-        var downPath = "announce_down.mp3";
-        var profile = new AudioProfile("館浜", "1", "melody.mp3", downPath, upPath);
+        var announceUpPath = "announce_up.mp3";
+        var announceDownPath = "announce_down.mp3";
+        var profile = new AudioProfile("館浜", "1", "melody_down.mp3", "melody_up.mp3", announceDownPath, announceUpPath);
 
         // Act
         var result = profile.GetDoorCloseAnnouncementPath(false);
 
         // Assert
-        result.Should().Be(downPath);
+        result.Should().Be(announceDownPath);
     }
 }

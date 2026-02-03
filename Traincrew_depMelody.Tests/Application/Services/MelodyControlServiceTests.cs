@@ -117,7 +117,7 @@ public class MelodyControlServiceTests
         await service.StartMelodyAsync();
 
         // Assert
-        _mockAudioPlayback.Verify(x => x.PlayMelodyAsync(It.IsAny<TrackInfo>()), Times.Never);
+        _mockAudioPlayback.Verify(x => x.PlayMelodyAsync(It.IsAny<TrackInfo>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]

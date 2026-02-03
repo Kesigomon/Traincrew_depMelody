@@ -247,7 +247,7 @@ public class AutoModeService : IAutoModeService
         // 条件2: ドア開後最低12秒後
         if (_doorOpenTime != null && (now - _doorOpenTime.Value).TotalSeconds < config.MinimumDoorOpenDuration) return;
 
-        // 条件3: 発車時刻ベース
+        // 条件3: 発車時刻ベース（DepartureTimeがない場合は条件1+2を満たしたのでそのまま停止）
         if (trainState.DepartureTime != null)
         {
             var margin = config.GetMarginForVehicle(trainState);
@@ -260,6 +260,11 @@ public class AutoModeService : IAutoModeService
                 shouldStop = true;
                 _logger.LogDebug("条件3満たす: 発車時刻ベース停止 (発車予定: {TrainStateDepartureTime})", trainState.DepartureTime);
             }
+        }
+        else
+        {
+            shouldStop = true;
+            _logger.LogDebug("DepartureTimeがnull: 条件1+2で停止");
         }
 
         if (shouldStop)

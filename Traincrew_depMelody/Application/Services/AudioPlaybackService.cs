@@ -53,7 +53,7 @@ public class AudioPlaybackService : IAudioPlaybackService
         if (profile == null)
         {
             _logger.LogWarning("音声プロファイルが見つかりません: {TrackStationName} {TrackTrackNumber}番線、デフォルトを使用", track.StationName, track.TrackNumber);
-            await _melodyPlayer.PlayLoopAsync(GetDefaultMelodyPath());
+            await _melodyPlayer.PlayLoopAsync(GetDefaultMelodyPath(isInbound));
             return;
         }
 
@@ -62,7 +62,7 @@ public class AudioPlaybackService : IAudioPlaybackService
         if (!File.Exists(melodyPath))
         {
             _logger.LogWarning("メロディーファイルが見つかりません: {MelodyPath}、デフォルトを使用", melodyPath);
-            melodyPath = GetDefaultMelodyPath();
+            melodyPath = GetDefaultMelodyPath(isInbound);
 
             if (!File.Exists(melodyPath))
             {
@@ -158,7 +158,7 @@ public class AudioPlaybackService : IAudioPlaybackService
 
         string melodyPath;
         if (profile == null || !File.Exists(profile.GetMelodyPath(isInbound)))
-            melodyPath = GetDefaultMelodyPath();
+            melodyPath = GetDefaultMelodyPath(isInbound);
         else
             melodyPath = profile.GetMelodyPath(isInbound);
 
@@ -169,8 +169,9 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// <summary>
     ///     デフォルトメロディーパスを取得
     /// </summary>
-    private string GetDefaultMelodyPath()
+    private string GetDefaultMelodyPath(bool isInbound)
     {
-        return Path.Combine(_config.AudioBaseDirectory, _config.DefaultMelodyFileName);
+        var fileName = isInbound ? _config.DefaultMelodyUpFileName : _config.DefaultMelodyDownFileName;
+        return Path.Combine(_config.AudioBaseDirectory, fileName);
     }
 }

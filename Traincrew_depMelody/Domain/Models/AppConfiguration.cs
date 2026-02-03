@@ -53,7 +53,8 @@ public class AppConfiguration
     /// <summary>
     ///     デフォルトメロディーファイル名
     /// </summary>
-    public string DefaultMelodyFileName { get; set; } = "default.mp3";
+    public string DefaultMelodyDownFileName { get; set; } = "default_down.mp3";
+    public string DefaultMelodyUpFileName { get; set; } = "default_up.mp3";
 
     /// <summary>
     ///     ログ出力ディレクトリ

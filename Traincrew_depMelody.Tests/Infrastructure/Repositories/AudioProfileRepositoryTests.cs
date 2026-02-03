@@ -57,7 +57,7 @@ public class AudioProfileRepositoryTests : IDisposable
         profile.Should().NotBeNull();
         profile!.StationName.Should().Be("館浜");
         profile.TrackNumber.Should().Be("1");
-        profile.MelodyFilePath.Should().NotBeNullOrEmpty();
+        profile.MelodyDownFilePath.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
