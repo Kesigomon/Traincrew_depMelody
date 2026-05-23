@@ -74,8 +74,8 @@ jobs:
           dotnet-version: '8.0.x'
       - name: Build Exe
         run: |
-          dotnet publish -c Release \
-            --project ./Traincrew_depMelody/Traincrew_depMelody.csproj \
+          dotnet publish ./Traincrew_depMelody/Traincrew_depMelody.csproj \
+            -c Release \
             -o ./out \
             -r win-${{ matrix.platform }} \
             -p:PublishSingleFile=true \
