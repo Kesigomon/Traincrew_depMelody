@@ -24,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="appsettings.json" CopyToOutputDirectory="CopyIfNewer" CopyToPublishDirectory="PreserveNewest"/>
+        <None Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest"/>
         <None Include="profiles\default.csv" CopyToPublishDirectory="PreserveNewest"/>
         <None Include="stations\stations.csv" CopyToPublishDirectory="PreserveNewest"/>
         <Folder Include="Audio\Announcement\"/>
