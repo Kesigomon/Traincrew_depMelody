@@ -171,7 +171,6 @@ public class AudioPlaybackService : IAudioPlaybackService
     /// </summary>
     private string GetDefaultMelodyPath(bool isInbound)
     {
-        var fileName = isInbound ? _config.DefaultMelodyUpFileName : _config.DefaultMelodyDownFileName;
-        return Path.Combine(_config.AudioBaseDirectory, fileName);
+        return isInbound ? _config.DefaultMelodyUpPath : _config.DefaultMelodyDownPath;
     }
 }

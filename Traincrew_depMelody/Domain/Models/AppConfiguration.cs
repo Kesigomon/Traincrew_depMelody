@@ -11,21 +11,6 @@ public class AppConfiguration
     public string FFmpegPath { get; set; } = "";
 
     /// <summary>
-    ///     音声ファイルのベースディレクトリ
-    /// </summary>
-    public string AudioBaseDirectory { get; set; } = @".\Audio";
-
-    /// <summary>
-    ///     メロディーフォルダパス
-    /// </summary>
-    public string MelodyDirectory => Path.Combine(AudioBaseDirectory, "Melody");
-
-    /// <summary>
-    ///     案内音声フォルダパス
-    /// </summary>
-    public string AnnouncementDirectory => Path.Combine(AudioBaseDirectory, "Announcement");
-
-    /// <summary>
     ///     stations.csvのパス
     /// </summary>
     public string StationsCsvPath { get; set; } = @".\stations\stations.csv";
@@ -51,10 +36,10 @@ public class AppConfiguration
     public int GameStatePollingIntervalMs { get; set; } = 16;
 
     /// <summary>
-    ///     デフォルトメロディーファイル名
+    ///     デフォルトメロディーパス（相対パス・絶対パス可）
     /// </summary>
-    public string DefaultMelodyDownFileName { get; set; } = "default_down.mp3";
-    public string DefaultMelodyUpFileName { get; set; } = "default_up.mp3";
+    public string DefaultMelodyDownPath { get; set; } = @".\Audio\default_down.mp3";
+    public string DefaultMelodyUpPath { get; set; } = @".\Audio\default_up.mp3";
 
     /// <summary>
     ///     ログ出力ディレクトリ
