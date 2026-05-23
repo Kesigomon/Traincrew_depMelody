@@ -57,7 +57,7 @@ jobs:
     needs: calc_version
     strategy:
       matrix:
-        platform: ['x64', 'x86']
+        platform: ['x64']
         standalone: [ false, true ]
     steps:
       - name: Set Zip File Name
