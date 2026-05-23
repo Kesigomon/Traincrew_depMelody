@@ -79,6 +79,7 @@ jobs:
             -r win-${{ matrix.platform }} \
             -p:PublishSingleFile=true \
             -p:EnableWindowsTargeting=true \
+            -p:UseAppHost=true \
             --self-contained ${{ matrix.standalone }}
       - name: Zip binaries
         run: |
