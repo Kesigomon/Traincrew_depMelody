@@ -23,6 +23,12 @@ public class FFmpegService : IFFmpegService
     /// </summary>
     public async Task<double?> GetAudioDurationAsync(string filePath)
     {
+        if (string.IsNullOrWhiteSpace(_config.FFmpegPath))
+        {
+            _logger.LogWarning("FFmpegのパスが設定されていません");
+            return null;
+        }
+
         if (!File.Exists(filePath))
         {
             _logger.LogWarning("音声ファイルが見つかりません: {FilePath}", filePath);

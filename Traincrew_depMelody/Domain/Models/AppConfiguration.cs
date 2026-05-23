@@ -8,7 +8,7 @@ public class AppConfiguration
     /// <summary>
     ///     FFmpegの実行ファイルパス
     /// </summary>
-    public string FFmpegPath { get; set; } = @"C:\ffmpeg\bin\ffmpeg.exe";
+    public string FFmpegPath { get; set; } = "";
 
     /// <summary>
     ///     音声ファイルのベースディレクトリ
