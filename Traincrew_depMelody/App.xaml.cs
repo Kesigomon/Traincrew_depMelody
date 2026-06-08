@@ -34,6 +34,10 @@ public partial class App : System.Windows.Application
         Console.OutputEncoding = Encoding.UTF8;
 #endif
 
+        // 作業ディレクトリを実行ファイルの場所に統一する
+        // ショートカット起動やパブリッシュ後でも appsettings.json / stations.csv / profiles/ の相対パスが安定する
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
@@ -79,6 +83,7 @@ public partial class App : System.Windows.Application
         // Infrastructure Layer - Repositories
         services.AddSingleton<ITrackRepository, TrackRepository>();
         services.AddSingleton<IAudioProfileRepository, AudioProfileRepository>();
+        services.AddSingleton<IConfigurationPersistenceService, ConfigurationPersistenceService>();
 
         // Infrastructure Layer - External Services
         services.AddSingleton<ITraincrewGameService, TraincrewGameService>();

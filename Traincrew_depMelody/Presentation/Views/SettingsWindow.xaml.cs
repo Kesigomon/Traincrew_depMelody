@@ -1,5 +1,7 @@
 using System.Windows;
 using Microsoft.Extensions.Logging;
+using Traincrew_depMelody.Domain.Interfaces;
+using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
 
@@ -10,17 +12,26 @@ public partial class SettingsWindow : Window
     private readonly ISerialButtonService _serialButton;
     private readonly SerialButtonConfig _serialButtonConfig;
     private readonly ILogger<SettingsWindow> _logger;
+    private readonly IAudioProfileRepository _profileRepository;
+    private readonly IAudioPlaybackService _audioPlaybackService;
+    private readonly IConfigurationPersistenceService _persistence;
 
     public SettingsWindow(
         ISerialButtonService serialButton,
         SerialButtonConfig serialButtonConfig,
-        ILogger<SettingsWindow> logger)
+        ILogger<SettingsWindow> logger,
+        IAudioProfileRepository profileRepository,
+        IAudioPlaybackService audioPlaybackService,
+        IConfigurationPersistenceService persistence)
     {
         InitializeComponent();
 
         _serialButton = serialButton ?? throw new ArgumentNullException(nameof(serialButton));
         _serialButtonConfig = serialButtonConfig ?? throw new ArgumentNullException(nameof(serialButtonConfig));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _profileRepository = profileRepository ?? throw new ArgumentNullException(nameof(profileRepository));
+        _audioPlaybackService = audioPlaybackService ?? throw new ArgumentNullException(nameof(audioPlaybackService));
+        _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
 
         Loaded += OnLoaded;
         Closed += OnClosed;
@@ -32,6 +43,7 @@ public partial class SettingsWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         InitializeSerialUi();
+        InitializeProfileUi();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -179,5 +191,46 @@ public partial class SettingsWindow : Window
     {
         // 状態ラベルをUIスレッドで更新する
         Dispatcher.Invoke(UpdateSerialStatus);
+    }
+
+    // ─── プロファイル UI ──────────────────────────────────────────────
+
+    /// <summary>
+    ///     プロファイル設定UIの初期値を設定する
+    /// </summary>
+    private void InitializeProfileUi()
+    {
+        ComboBoxProfile.Items.Clear();
+        foreach (var name in _profileRepository.GetAvailableProfileNames())
+        {
+            ComboBoxProfile.Items.Add(name);
+        }
+        ComboBoxProfile.SelectedItem = _profileRepository.CurrentProfileName;
+        LabelProfileStatus.Content = $"現在: {_profileRepository.CurrentProfileName}";
+    }
+
+    private async void ButtonApplyProfile_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = ComboBoxProfile.SelectedItem as string;
+        if (string.IsNullOrEmpty(selected))
+        {
+            MessageBox.Show("プロファイルを選択してください", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (selected == _profileRepository.CurrentProfileName) return;
+
+        try
+        {
+            _audioPlaybackService.StopAll();
+            await _profileRepository.SwitchProfileAsync(selected);
+            await _persistence.SaveProfileNameAsync(selected);
+            LabelProfileStatus.Content = $"現在: {selected}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "プロファイル切り替えエラー");
+            MessageBox.Show($"プロファイル切り替えエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }

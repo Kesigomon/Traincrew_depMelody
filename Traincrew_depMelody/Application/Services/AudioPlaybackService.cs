@@ -83,6 +83,15 @@ public class AudioPlaybackService : IAudioPlaybackService
     }
 
     /// <summary>
+    ///     メロディーとアナウンスをすべて停止
+    /// </summary>
+    public void StopAll()
+    {
+        _melodyPlayer.Stop();
+        _announcementPlayer.Stop();
+    }
+
+    /// <summary>
     ///     ドア閉め案内を再生(1回)
     /// </summary>
     public async Task PlayDoorCloseAnnouncementAsync(TrackInfo track, bool isInbound)

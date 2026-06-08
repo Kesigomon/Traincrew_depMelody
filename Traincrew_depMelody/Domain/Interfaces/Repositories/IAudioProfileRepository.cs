@@ -8,6 +8,11 @@ namespace Traincrew_depMelody.Domain.Interfaces.Repositories;
 public interface IAudioProfileRepository
 {
     /// <summary>
+    ///     現在のプロファイル名(拡張子なし)
+    /// </summary>
+    string CurrentProfileName { get; }
+
+    /// <summary>
     ///     全ての音声プロファイルを取得
     /// </summary>
     Task<IEnumerable<AudioProfile>> GetAllProfilesAsync();
@@ -21,4 +26,14 @@ public interface IAudioProfileRepository
     ///     音声プロファイルCSVを再読み込み
     /// </summary>
     Task ReloadAsync();
+
+    /// <summary>
+    ///     利用可能なプロファイル名を列挙(拡張子なし)
+    /// </summary>
+    IEnumerable<string> GetAvailableProfileNames();
+
+    /// <summary>
+    ///     プロファイルを切り替えてリロード
+    /// </summary>
+    Task SwitchProfileAsync(string profileName);
 }

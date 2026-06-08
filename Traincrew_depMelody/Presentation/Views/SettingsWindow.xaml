@@ -35,6 +35,19 @@
                     </StackPanel>
                 </StackPanel>
             </TabItem>
+
+            <!-- プロファイル設定タブ -->
+            <TabItem Header="プロファイル">
+                <StackPanel Margin="8">
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Label Content="プロファイル:" VerticalAlignment="Center" Width="80" />
+                        <ComboBox x:Name="ComboBoxProfile" Width="160" VerticalAlignment="Center" />
+                        <Button x:Name="ButtonApplyProfile" Content="適用" Width="54"
+                                Margin="8,0,0,0" Click="ButtonApplyProfile_Click" />
+                    </StackPanel>
+                    <Label x:Name="LabelProfileStatus" Content="" Margin="0,8,0,0" />
+                </StackPanel>
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

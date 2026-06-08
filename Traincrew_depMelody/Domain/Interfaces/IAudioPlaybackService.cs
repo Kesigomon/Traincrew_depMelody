@@ -18,6 +18,11 @@ public interface IAudioPlaybackService
     void StopMelody();
 
     /// <summary>
+    ///     メロディーとアナウンスをすべて停止
+    /// </summary>
+    void StopAll();
+
+    /// <summary>
     ///     ドア閉め案内を再生(1回)
     /// </summary>
     Task PlayDoorCloseAnnouncementAsync(TrackInfo track, bool isInbound);
