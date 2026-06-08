@@ -124,23 +124,25 @@ public class MelodyControlService : IMelodyControlService
             _currentState = _currentState.With(false);
         }
 
+#if DEBUG
         // ゲーム時刻で1秒待機
-        var gameState = _gameService.GetCachedGameState();
-        var startTime = gameState.CurrentGameTime;
+        var debugGameState = _gameService.GetCachedGameState();
+        var startTime = debugGameState.CurrentGameTime;
         var targetTime = startTime.Add(TimeSpan.FromSeconds(1.0));
 
         while (true)
         {
-            gameState = _gameService.GetCachedGameState();
+            debugGameState = _gameService.GetCachedGameState();
 
             // ゲーム時刻が目標時刻に到達したら終了
-            if (gameState.CurrentGameTime >= targetTime) break;
+            if (debugGameState.CurrentGameTime >= targetTime) break;
 
             await Task.Delay(16); // 16ms周期でチェック
-        }
+        } 
+#endif
 
         // ドア閉め案内再生
-        gameState = _gameService.GetCachedGameState();
+        var gameState = _gameService.GetCachedGameState();
         var isInbound = gameState.TrainState?.IsInbound() ?? false;
 
         _logger.LogInformation("ドア閉め案内再生: {TrackTrackNumber}番線 ({上り})", track.TrackNumber, isInbound ? "上り" : "下り");
