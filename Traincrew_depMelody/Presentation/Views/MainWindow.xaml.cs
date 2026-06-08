@@ -18,9 +18,11 @@ public partial class MainWindow : Window
     private readonly ITrackRepository _trackRepository;
     private readonly ISerialButtonService _serialButton;
     private readonly SerialButtonConfig _serialButtonConfig;
+    private readonly Func<SettingsWindow> _settingsWindowFactory;
 
     private GameState _currentGameState = new();
     private DispatcherTimer? _updateTimer;
+    private SettingsWindow? _settingsWindow;
 
     public MainWindow(
         IMelodyControlService melodyControl,
@@ -29,6 +31,7 @@ public partial class MainWindow : Window
         ITrackRepository trackRepository,
         ISerialButtonService serialButton,
         SerialButtonConfig serialButtonConfig,
+        Func<SettingsWindow> settingsWindowFactory,
         ILogger<MainWindow> logger)
     {
         InitializeComponent();
@@ -39,6 +42,7 @@ public partial class MainWindow : Window
         _trackRepository = trackRepository ?? throw new ArgumentNullException(nameof(trackRepository));
         _serialButton = serialButton ?? throw new ArgumentNullException(nameof(serialButton));
         _serialButtonConfig = serialButtonConfig ?? throw new ArgumentNullException(nameof(serialButtonConfig));
+        _settingsWindowFactory = settingsWindowFactory ?? throw new ArgumentNullException(nameof(settingsWindowFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         Loaded += OnLoaded;
@@ -70,16 +74,12 @@ public partial class MainWindow : Window
             MessageBox.Show("Traincrewゲームに接続できませんでした", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        // 入力線ComboBoxを初期化
-        InitializeSerialUi();
-
         // appsettings でポートが指定されていれば自動接続を試みる
         if (!string.IsNullOrEmpty(_serialButtonConfig.PortName))
         {
             try
             {
                 await _serialButton.ConnectAsync(_serialButtonConfig);
-                UpdateSerialStatus();
                 _logger.LogInformation("シリアルポート {Port} に自動接続しました", _serialButtonConfig.PortName);
             }
             catch (Exception ex)
@@ -91,6 +91,13 @@ public partial class MainWindow : Window
 
     private async void OnClosing(object? sender, CancelEventArgs e)
     {
+        // 設定ウィンドウが開いていれば閉じる
+        if (_settingsWindow != null)
+        {
+            _settingsWindow.Close();
+            _settingsWindow = null;
+        }
+
         _updateTimer?.Stop();
         _updateTimer = null;
 
@@ -162,133 +169,28 @@ public partial class MainWindow : Window
         OffButton.IsEnabled = shouldEnable;
     }
 
-    // ─── シリアルポート UI ────────────────────────────────────────────
-
     /// <summary>
-    ///     シリアル設定UIの初期値を設定する
+    ///     右クリックで設定ウィンドウを開く
     /// </summary>
-    private void InitializeSerialUi()
+    private void Window_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
-        // 入力線選択肢を設定
-        ComboBoxPin.Items.Clear();
-        foreach (var pin in Enum.GetNames<SerialInputPin>())
-        {
-            ComboBoxPin.Items.Add(pin);
-        }
-        ComboBoxPin.SelectedItem = _serialButtonConfig.InputPin.ToString();
-
-        // 反転チェックボックス
-        CheckBoxInverted.IsChecked = _serialButtonConfig.Inverted;
-
-        // ポート一覧を読み込む
-        RefreshPortList();
-
-        // appsettings のポートが一覧にあれば選択
-        if (!string.IsNullOrEmpty(_serialButtonConfig.PortName)
-            && ComboBoxPort.Items.Contains(_serialButtonConfig.PortName))
-        {
-            ComboBoxPort.SelectedItem = _serialButtonConfig.PortName;
-        }
+        ShowSettingsWindow();
     }
 
     /// <summary>
-    ///     利用可能なポート一覧をComboBoxに読み込む
+    ///     設定ウィンドウのシングルインスタンス管理: 既存が表示中なら前面に出し、なければ新規生成して表示する
     /// </summary>
-    private void RefreshPortList()
+    private void ShowSettingsWindow()
     {
-        var current = ComboBoxPort.SelectedItem?.ToString();
-        ComboBoxPort.Items.Clear();
-        foreach (var port in _serialButton.GetAvailablePorts())
+        if (_settingsWindow == null || !_settingsWindow.IsVisible)
         {
-            ComboBoxPort.Items.Add(port);
-        }
-
-        // 以前選択していたポートが残っていれば復元
-        if (current != null && ComboBoxPort.Items.Contains(current))
-        {
-            ComboBoxPort.SelectedItem = current;
-        }
-        else if (ComboBoxPort.Items.Count > 0)
-        {
-            ComboBoxPort.SelectedIndex = 0;
-        }
-    }
-
-    /// <summary>
-    ///     接続状態に応じてUIの状態ラベルとボタン活性を更新する
-    /// </summary>
-    private void UpdateSerialStatus()
-    {
-        if (_serialButton.IsConnected)
-        {
-            var port = ComboBoxPort.SelectedItem?.ToString() ?? "";
-            var stateText = _serialButton.CurrentState ? "ON" : "OFF";
-            LabelSerialStatus.Content = $"接続中: {port} ({stateText})";
-            ButtonConnect.IsEnabled = false;
-            ButtonDisconnect.IsEnabled = true;
+            _settingsWindow = _settingsWindowFactory();
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.Show();
         }
         else
         {
-            LabelSerialStatus.Content = "未接続";
-            ButtonConnect.IsEnabled = true;
-            ButtonDisconnect.IsEnabled = false;
-        }
-    }
-
-    private void ButtonRefreshPorts_Click(object sender, RoutedEventArgs e)
-    {
-        RefreshPortList();
-    }
-
-    private async void ButtonConnect_Click(object sender, RoutedEventArgs e)
-    {
-        var portName = ComboBoxPort.SelectedItem?.ToString();
-        if (string.IsNullOrEmpty(portName))
-        {
-            MessageBox.Show("ポートを選択してください", "エラー", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var pinText = ComboBoxPin.SelectedItem?.ToString();
-        if (!Enum.TryParse<SerialInputPin>(pinText, out var pin))
-        {
-            pin = SerialInputPin.Dsr;
-        }
-
-        var config = new SerialButtonConfig
-        {
-            PortName = portName,
-            BaudRate = _serialButtonConfig.BaudRate,
-            DtrEnable = _serialButtonConfig.DtrEnable,
-            RtsEnable = _serialButtonConfig.RtsEnable,
-            InputPin = pin,
-            PollingIntervalMs = _serialButtonConfig.PollingIntervalMs,
-            Inverted = CheckBoxInverted.IsChecked == true
-        };
-
-        try
-        {
-            await _serialButton.ConnectAsync(config);
-            UpdateSerialStatus();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "シリアルポート接続エラー");
-            MessageBox.Show($"接続エラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-    }
-
-    private async void ButtonDisconnect_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await _serialButton.DisconnectAsync();
-            UpdateSerialStatus();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "シリアルポート切断エラー");
-            MessageBox.Show($"切断エラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+            _settingsWindow.Activate();
         }
     }
 
@@ -307,9 +209,6 @@ public partial class MainWindow : Window
             {
                 await _melodyControl.StopMelodyAsync();
             }
-
-            // 状態ラベルをUIスレッドで更新
-            Dispatcher.Invoke(UpdateSerialStatus);
         }
         catch (Exception ex)
         {

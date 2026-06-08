@@ -1,0 +1,40 @@
+<Window x:Class="Traincrew_depMelody.Presentation.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="設定" Height="300" Width="400"
+        ResizeMode="NoResize">
+    <Grid Margin="8">
+        <TabControl>
+            <!-- シリアルポート設定タブ -->
+            <TabItem Header="シリアルポート">
+                <StackPanel Margin="8">
+                    <!-- ポート選択 + 更新ボタン -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Label Content="ポート:" VerticalAlignment="Center" Width="50" />
+                        <ComboBox x:Name="ComboBoxPort" Width="100" VerticalAlignment="Center" />
+                        <Button x:Name="ButtonRefreshPorts" Content="更新" Width="44"
+                                Margin="4,0,0,0" Click="ButtonRefreshPorts_Click" />
+                    </StackPanel>
+
+                    <!-- 入力線選択 + 反転チェックボックス -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Label Content="入力線:" VerticalAlignment="Center" Width="50" />
+                        <ComboBox x:Name="ComboBoxPin" Width="80" VerticalAlignment="Center" />
+                        <CheckBox x:Name="CheckBoxInverted" Content="反転" Margin="8,0,0,0"
+                                  VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- 接続/切断ボタン + 状態ラベル -->
+                    <StackPanel Orientation="Horizontal" Margin="0,4">
+                        <Button x:Name="ButtonConnect" Content="接続" Width="54"
+                                Click="ButtonConnect_Click" />
+                        <Button x:Name="ButtonDisconnect" Content="切断" Width="54"
+                                Margin="4,0,0,0" Click="ButtonDisconnect_Click" IsEnabled="False" />
+                        <Label x:Name="LabelSerialStatus" Content="未接続"
+                               Margin="8,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
