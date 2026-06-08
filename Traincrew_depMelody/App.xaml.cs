@@ -63,6 +63,9 @@ public partial class App : System.Windows.Application
         var autoModeConfig = configuration.GetSection("AutoModeConfig").Get<AutoModeConfig>() ?? new AutoModeConfig();
         services.AddSingleton(autoModeConfig);
 
+        var serialButtonConfig = configuration.GetSection("SerialButton").Get<SerialButtonConfig>() ?? new SerialButtonConfig();
+        services.AddSingleton(serialButtonConfig);
+
         // Presentation Layer
         services.AddSingleton<MainWindow>();
 
@@ -78,6 +81,7 @@ public partial class App : System.Windows.Application
         // Infrastructure Layer - External Services
         services.AddSingleton<ITraincrewGameService, TraincrewGameService>();
         services.AddSingleton<IFFmpegService, FFmpegService>();
+        services.AddSingleton<ISerialButtonService, SerialButtonService>();
     }
 
     protected override void OnExit(ExitEventArgs e)

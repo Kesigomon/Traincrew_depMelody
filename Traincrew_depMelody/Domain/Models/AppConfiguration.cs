@@ -50,4 +50,9 @@ public class AppConfiguration
     ///     開発者モード(デバッグ情報表示)
     /// </summary>
     public bool DeveloperMode { get; set; } = false;
+
+    /// <summary>
+    ///     シリアルポートボタン設定
+    /// </summary>
+    public SerialButtonConfig SerialButton { get; set; } = new();
 }
