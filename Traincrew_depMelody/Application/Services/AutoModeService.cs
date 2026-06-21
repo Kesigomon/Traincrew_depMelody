@@ -18,6 +18,8 @@ public class AutoModeService : IAutoModeService
     // 自動モードの状態追跡(ゲーム内時刻で記録)
     private TimeSpan? _arrivalTime;
 
+    // メロディー長のffmpeg取得結果キャッシュ(ゲーム状態ポーリング16ms毎にffmpeg起動が走るのを防ぐため)
+    private (string StationName, string TrackNumber, bool IsInbound, double Duration)? _cachedMelodyDuration;
     private AutoModeConfig _config;
     private TimeSpan? _doorOpenTime;
     private TimeSpan? _melodyStartTime;
@@ -198,7 +200,22 @@ public class AutoModeService : IAutoModeService
             if (track != null)
             {
                 var isInbound = trainState.IsInbound();
-                var melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track, isInbound);
+                double melodyDuration;
+                // 駅名・番線・方向が前回と同一ならキャッシュを使う(同一区間に滞在中は毎ポーリングでffmpegを呼ばないため)
+                if (_cachedMelodyDuration is { } cached &&
+                    cached.StationName == track.StationName &&
+                    cached.TrackNumber == track.TrackNumber &&
+                    cached.IsInbound == isInbound)
+                {
+                    melodyDuration = cached.Duration;
+                }
+                else
+                {
+                    // キャッシュ未取得/別駅・別番線に変わった場合のみffmpegで取得し、結果を保持する
+                    melodyDuration = await _audioPlayback.GetMelodyDurationAsync(track, isInbound);
+                    _cachedMelodyDuration = (track.StationName, track.TrackNumber, isInbound, melodyDuration);
+                }
+
                 var margin = config.GetMarginForVehicle(trainState);
                 var totalOffset = melodyDuration + config.DoorCloseAnnouncementDuration + margin;
 
@@ -279,5 +296,7 @@ public class AutoModeService : IAutoModeService
         _doorOpenTime = null;
         _melodyTriggered = false;
         _previousDoorsOpen = false;
+        // 駅離脱/状態リセット時にクリアし、次に別駅・別番線へ遷移した際は再取得させる
+        _cachedMelodyDuration = null;
     }
 }
