@@ -73,7 +73,7 @@ public partial class App : System.Windows.Application
         // Presentation Layer
         services.AddSingleton<MainWindow>();
         services.AddTransient<SettingsWindow>();
-        services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
+        services.AddSingleton<Func<SettingsWindow>>(sp => sp.GetRequiredService<SettingsWindow>);
 
         // Application Layer
         services.AddSingleton<IMelodyControlService, MelodyControlService>();
