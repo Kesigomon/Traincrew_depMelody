@@ -179,23 +179,19 @@ public class AutoModeService : IAutoModeService
         var config = GetConfig();
         var now = gameState.CurrentGameTime; // ゲーム内時刻を使用
 
-        var shouldStart = false;
-
         // 条件1: 到着後1秒後
-        if (_arrivalTime != null && (now - _arrivalTime.Value).TotalSeconds >= config.DelayAfterArrival)
+        if (_arrivalTime == null || (now - _arrivalTime.Value).TotalSeconds < config.DelayAfterArrival)
         {
-            shouldStart = true;
-            _logger.LogDebug("条件1満たす: 到着後1秒");
+            return;
         }
 
         // 条件2: 信号開通0.5秒後
-        if (_signalOpenTime != null && (now - _signalOpenTime.Value).TotalSeconds >= config.DelayAfterSignalOpen)
+        if (_signalOpenTime == null || (now - _signalOpenTime.Value).TotalSeconds < config.DelayAfterSignalOpen)
         {
-            shouldStart = true;
-            _logger.LogDebug("条件2満たす: 信号開通0.5秒後");
+            return;
         }
 
-        // 条件3: 発車時刻ベース
+        // 条件3: 発車時刻ベース(発車予定が分かっている場合のみブロック判定。分からない場合は条件1・2のみで判定)
         if (trainState.DepartureTime != null && gameState.CurrentCircuitId.Any())
         {
             var track = await _trackRepository.FindTrackByCircuitIdAsync(gameState.CurrentCircuitId, gameState.TrainClass);
@@ -208,21 +204,19 @@ public class AutoModeService : IAutoModeService
 
                 var targetTime = trainState.DepartureTime.Value.Subtract(TimeSpan.FromSeconds(totalOffset));
 
-                if (now >= targetTime)
+                if (now < targetTime)
                 {
-                    shouldStart = true;
-                    _logger.LogDebug("条件3満たす: 発車時刻ベース (発車予定: {TrainStateDepartureTime})", trainState.DepartureTime);
+                    return;
                 }
+
+                _logger.LogDebug("条件3満たす: 発車時刻ベース (発車予定: {TrainStateDepartureTime})", trainState.DepartureTime);
             }
         }
 
-        if (shouldStart)
-        {
-            _logger.LogInformation("自動モード: メロディー開始");
-            await _melodyControl.StartMelodyAsync();
-            _melodyStartTime = gameState.CurrentGameTime; // ゲーム内時刻を使用
-            _melodyTriggered = true;
-        }
+        _logger.LogInformation("自動モード: メロディー開始");
+        await _melodyControl.StartMelodyAsync();
+        _melodyStartTime = gameState.CurrentGameTime; // ゲーム内時刻を使用
+        _melodyTriggered = true;
     }
 
     /// <summary>
