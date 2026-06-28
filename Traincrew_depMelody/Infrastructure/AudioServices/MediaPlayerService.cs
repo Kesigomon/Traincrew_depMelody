@@ -42,7 +42,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
 
         try
         {
-            _player.Open(new Uri(filePath, UriKind.Absolute));
+            _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
         }
         catch (UriFormatException ex)
         {
@@ -74,7 +74,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
 
         try
         {
-            _player.Open(new Uri(filePath, UriKind.Absolute));
+            _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
         }
         catch (UriFormatException ex)
         {
