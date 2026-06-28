@@ -139,3 +139,4 @@ jobs:
           make_latest: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           files: ${{ steps.get_files.outputs.FILES }}
           prerelease: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
+          target_commitish: ${{ github.sha }}
