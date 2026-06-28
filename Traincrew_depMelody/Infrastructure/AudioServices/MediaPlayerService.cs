@@ -14,16 +14,49 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     public MediaPlayerService(ILogger<MediaPlayerService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _player = new();
-        _player.MediaEnded += OnMediaEnded;
+
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher != null && !dispatcher.CheckAccess())
+        {
+            MediaPlayer? created = null;
+            dispatcher.Invoke(() =>
+            {
+                created = new MediaPlayer();
+                created.MediaEnded += OnMediaEnded;
+            });
+            _player = created!;
+        }
+        else
+        {
+            _player = new MediaPlayer();
+            _player.MediaEnded += OnMediaEnded;
+        }
     }
 
     public bool IsPlaying { get; private set; }
 
     public double Volume
     {
-        get => _player.Volume;
-        set => _player.Volume = Math.Clamp(value, 0.0, 1.0);
+        get => InvokeOnPlayerThread(() => _player.Volume);
+        set => InvokeOnPlayerThread(() => _player.Volume = Math.Clamp(value, 0.0, 1.0));
+    }
+
+    private void InvokeOnPlayerThread(Action action)
+    {
+        var dispatcher = _player.Dispatcher;
+        if (dispatcher.CheckAccess())
+            action();
+        else
+            dispatcher.Invoke(action);
+    }
+
+    private T InvokeOnPlayerThread<T>(Func<T> func)
+    {
+        var dispatcher = _player.Dispatcher;
+        if (dispatcher.CheckAccess())
+            return func();
+        else
+            return (T)dispatcher.Invoke(func);
     }
 
     /// <summary>
@@ -42,15 +75,17 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
 
         try
         {
-            _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
+            InvokeOnPlayerThread(() =>
+            {
+                _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
+                _player.Play();
+            });
         }
         catch (UriFormatException ex)
         {
             _logger.LogError(ex, "URI変換失敗: {FilePath}", filePath);
             throw;
         }
-
-        _player.Play();
 
         IsPlaying = true;
         _logger.LogDebug("ループ再生開始: {FilePath}", filePath);
@@ -74,15 +109,17 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
 
         try
         {
-            _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
+            InvokeOnPlayerThread(() =>
+            {
+                _player.Open(new Uri(filePath, UriKind.RelativeOrAbsolute));
+                _player.Play();
+            });
         }
         catch (UriFormatException ex)
         {
             _logger.LogError(ex, "URI変換失敗: {FilePath}", filePath);
             throw;
         }
-
-        _player.Play();
 
         IsPlaying = true;
         _logger.LogDebug("1回再生開始: {FilePath}", filePath);
@@ -95,7 +132,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     /// </summary>
     public void Stop()
     {
-        _player.Stop();
+        InvokeOnPlayerThread(() => _player.Stop());
         IsPlaying = false;
         _isLooping = false;
         _logger.LogDebug("再生停止");
@@ -106,7 +143,7 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     /// </summary>
     public void Pause()
     {
-        _player.Pause();
+        InvokeOnPlayerThread(() => _player.Pause());
         _logger.LogDebug("一時停止");
     }
 
@@ -115,14 +152,26 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
     /// </summary>
     public void Resume()
     {
-        _player.Play();
+        InvokeOnPlayerThread(() => _player.Play());
         _logger.LogDebug("再開");
     }
 
     public void Dispose()
     {
-        _player.MediaEnded -= OnMediaEnded;
-        _player.Close();
+        try
+        {
+            InvokeOnPlayerThread(() =>
+            {
+                _player.MediaEnded -= OnMediaEnded;
+                _player.Close();
+            });
+        }
+        catch (TaskCanceledException)
+        {
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     /// <summary>
@@ -133,8 +182,11 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
         if (_isLooping && _currentFilePath != null)
         {
             // ループ再生
-            _player.Position = TimeSpan.Zero;
-            _player.Play();
+            InvokeOnPlayerThread(() =>
+            {
+                _player.Position = TimeSpan.Zero;
+                _player.Play();
+            });
             _logger.LogTrace("ループ再生継続");
         }
         else
