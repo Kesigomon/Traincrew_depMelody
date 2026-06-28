@@ -40,7 +40,16 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
         _currentFilePath = filePath;
         _isLooping = true;
 
-        _player.Open(new(filePath, UriKind.Absolute));
+        try
+        {
+            _player.Open(new Uri(filePath, UriKind.Absolute));
+        }
+        catch (UriFormatException ex)
+        {
+            _logger.LogError(ex, "URI変換失敗: {FilePath}", filePath);
+            throw;
+        }
+
         _player.Play();
 
         IsPlaying = true;
@@ -63,7 +72,16 @@ public class MediaPlayerService : IAudioPlayerService, IDisposable
         _currentFilePath = filePath;
         _isLooping = false;
 
-        _player.Open(new(filePath, UriKind.Absolute));
+        try
+        {
+            _player.Open(new Uri(filePath, UriKind.Absolute));
+        }
+        catch (UriFormatException ex)
+        {
+            _logger.LogError(ex, "URI変換失敗: {FilePath}", filePath);
+            throw;
+        }
+
         _player.Play();
 
         IsPlaying = true;

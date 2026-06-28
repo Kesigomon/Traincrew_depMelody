@@ -10,6 +10,7 @@ using Traincrew_depMelody.Domain.Interfaces.Repositories;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
 using Traincrew_depMelody.Infrastructure.ExternalServices;
+using Traincrew_depMelody.Infrastructure.Logging;
 using Traincrew_depMelody.Infrastructure.Repositories;
 using Traincrew_depMelody.Presentation.Views;
 
@@ -42,20 +43,25 @@ public partial class App : System.Windows.Application
         ConfigureServices(services);
         _serviceProvider = services.BuildServiceProvider();
 
+        var appLogger = _serviceProvider.GetRequiredService<ILogger<App>>();
+        DispatcherUnhandledException += (_, e) =>
+        {
+            appLogger.LogError(e.Exception, "未処理例外 (UIスレッド)");
+            // ダイアログ表示はそのまま残す (e.Handled = false)
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            if (e.ExceptionObject is Exception ex)
+                appLogger.LogError(ex, "未処理例外 (非UIスレッド)");
+        };
+
         var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
         mainWindow.Show();
     }
 
     private void ConfigureServices(IServiceCollection services)
     {
-        // Logging
-        services.AddLogging(configure =>
-        {
-            configure.AddConsole();
-            configure.SetMinimumLevel(LogLevel.Debug);
-        });
-
-        // Configuration
+        // Configuration (先に構築して LogDirectory を Logging 設定に渡す)
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
@@ -63,6 +69,14 @@ public partial class App : System.Windows.Application
 
         var appConfig = configuration.Get<AppConfiguration>() ?? new AppConfiguration();
         services.AddSingleton(appConfig);
+
+        // Logging
+        services.AddLogging(configure =>
+        {
+            configure.AddConsole();
+            configure.SetMinimumLevel(LogLevel.Debug);
+            configure.AddProvider(new FileLoggerProvider(appConfig.LogDirectory));
+        });
 
         var autoModeConfig = configuration.GetSection("AutoModeConfig").Get<AutoModeConfig>() ?? new AutoModeConfig();
         services.AddSingleton(autoModeConfig);
