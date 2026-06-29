@@ -36,17 +36,12 @@ public class TrainState
     public bool IsStopped => Speed < 0.1;
 
     /// <summary>
-    ///     上り列車かどうかを判定(列車番号の末尾で判断)
+    ///     上り列車かどうかを判定(列車番号の末尾側から見て最初に現れる数字で判断)
     /// </summary>
     public bool IsInbound()
     {
-        if (string.IsNullOrEmpty(TrainNumber)) return false;
-
-        // 列車番号の末尾が偶数なら上り、奇数なら下り
-        var lastChar = TrainNumber[^1];
-        if (char.IsDigit(lastChar)) return int.Parse(lastChar.ToString()) % 2 == 0;
-
-        return false;
+        var lastDigit = TrainNumber?.LastOrDefault(char.IsDigit) ?? '\0';
+        return char.IsDigit(lastDigit) && (lastDigit - '0') % 2 == 0;
     }
 
     /// <summary>
