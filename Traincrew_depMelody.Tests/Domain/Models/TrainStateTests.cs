@@ -75,9 +75,9 @@ public class TrainStateTests
     }
 
     [Fact]
-    public void IsInbound_NonNumericSuffix_ReturnsFalse()
+    public void IsInbound_SuffixLetterUsesLastDigit_Odd()
     {
-        // Arrange
+        // Arrange: 末尾英字でも最後の数字 `3` が奇数なので false
         var trainState = new TrainState { TrainNumber = "123A" };
 
         // Act
@@ -85,6 +85,25 @@ public class TrainStateTests
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("624A", true)]   // 末尾英字、最後の数字 4 が偶数 → 上り
+    [InlineData("681B", false)]   // 末尾英字、最後の数字 1 が奇数 → 下り
+    [InlineData("1184C", true)]    // 末尾英字、最後の数字 4 が偶数 → 上り
+    [InlineData("1A2B", true)]    // 数字+英字が中間で混在、末尾側の数字 2 が偶数 → 上り
+    [InlineData("ABC", false)]    // 数字なし → false
+    [InlineData("", false)]       // 空文字 → false
+    public void IsInbound_SuffixLetter_UsesLastDigitForParity(string trainNumber, bool expected)
+    {
+        // Arrange
+        var trainState = new TrainState { TrainNumber = trainNumber };
+
+        // Act
+        var result = trainState.IsInbound();
+
+        // Assert
+        result.Should().Be(expected);
     }
 
     [Fact]
