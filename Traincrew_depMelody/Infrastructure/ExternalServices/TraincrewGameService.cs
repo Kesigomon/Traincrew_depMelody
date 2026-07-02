@@ -1,6 +1,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Traincrew_depMelody.Domain.Interfaces.Services;
 using Traincrew_depMelody.Domain.Models;
@@ -56,12 +57,14 @@ internal class TrackCircuitData
     }
 }
 
-public class TraincrewGameService : ITraincrewGameService, IDisposable
+public partial class TraincrewGameService : ITraincrewGameService, IDisposable
 {
     private const string DataRequestCommand = "DataRequest";
     private const string ConnectUri = "ws://127.0.0.1:50300/";
     private static readonly string[] DataRequestArgs = ["tconlyontrain"];
     private static readonly Encoding Encoding = Encoding.UTF8;
+    [GeneratedRegex(@"\d+")]
+    private static partial Regex RegexIsDigits();
 
     private readonly AppConfiguration _config;
     private readonly SemaphoreSlim _fetchDataSemaphore = new(1, 1);
@@ -347,7 +350,8 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
 
         _trackCircuits = trainCrewStateData
             .trackCircuitList
-            .Where(trackCircuit => trackCircuit.Last == trainNumber)
+            .Where(trackCircuit => 
+                GetDiaNumberFromTrainNumber(trackCircuit.Last) == GetDiaNumberFromTrainNumber(trainNumber))
             .Select(trackCircuit => trackCircuit.Name)
             .ToList();
     }
@@ -362,5 +366,32 @@ public class TraincrewGameService : ITraincrewGameService, IDisposable
             GameScreen.MainGame => true,
             _ => false
         };
+    }
+    
+    /// <summary>
+    /// 列車番号から運番を求める
+    /// </summary>
+    /// <param name="trainNumber">列車番号</param>
+    /// <returns></returns>
+    public static int GetDiaNumberFromTrainNumber(string trainNumber)
+    {
+        if (trainNumber == "9999")
+        {
+            return 400;
+        }
+
+        // 列番本体（数字部分）
+        var isTrain = int.TryParse(
+            RegexIsDigits().Match(trainNumber).Value,
+            out var numBody);
+        if (!isTrain)
+        {
+            // 列番が数字でない場合は運番を0とする
+            return 0;
+        }
+
+        // 偶数に切り捨ててから計算
+        var evenNumBody = numBody % 2 == 0 ? numBody : numBody - 1;
+        return evenNumBody / 3000 * 100 + evenNumBody % 100;
     }
 }
