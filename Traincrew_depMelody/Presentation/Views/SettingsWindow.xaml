@@ -5,6 +5,19 @@
         ResizeMode="NoResize">
     <Grid Margin="8">
         <TabControl>
+            <!-- 一般設定タブ -->
+            <TabItem Header="一般">
+                <StackPanel Margin="8">
+                    <Label Content="最前面表示:" FontWeight="Bold" Margin="0,0,0,4" />
+                    <RadioButton x:Name="RadioTopmostNever" Content="しない" Margin="0,2" GroupName="Topmost" />
+                    <RadioButton x:Name="RadioTopmostWhenButtonEnabled" Content="ボタンが押せる場合にする" Margin="0,2" GroupName="Topmost" />
+                    <RadioButton x:Name="RadioTopmostWhilePlaying" Content="プレイ中(ポーズ中含め)にする" Margin="0,2" GroupName="Topmost" />
+                    <RadioButton x:Name="RadioTopmostAlways" Content="常にする" Margin="0,2" GroupName="Topmost" />
+                    <Button x:Name="ButtonApplyTopmost" Content="適用" Width="54" HorizontalAlignment="Left" Margin="0,8,0,0" Click="ButtonApplyTopmost_Click" />
+                    <Label x:Name="LabelTopmostStatus" Content="" Margin="0,4,0,0" />
+                </StackPanel>
+            </TabItem>
+
             <!-- シリアルポート設定タブ -->
             <TabItem Header="シリアルポート">
                 <StackPanel Margin="8">

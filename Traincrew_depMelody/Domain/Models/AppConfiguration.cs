@@ -55,4 +55,9 @@ public class AppConfiguration
     ///     シリアルポートボタン設定
     /// </summary>
     public SerialButtonConfig SerialButton { get; set; } = new();
+
+    /// <summary>
+    ///     最前面表示モード
+    /// </summary>
+    public TopmostMode TopmostMode { get; set; } = TopmostMode.Never;
 }
