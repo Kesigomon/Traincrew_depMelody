@@ -19,6 +19,7 @@ public partial class MainWindow : Window
     private readonly ISerialButtonService _serialButton;
     private readonly SerialButtonConfig _serialButtonConfig;
     private readonly Func<SettingsWindow> _settingsWindowFactory;
+    private readonly AppConfiguration _appConfiguration;
 
     private GameState _currentGameState = new();
     private DispatcherTimer? _updateTimer;
@@ -32,7 +33,8 @@ public partial class MainWindow : Window
         ISerialButtonService serialButton,
         SerialButtonConfig serialButtonConfig,
         Func<SettingsWindow> settingsWindowFactory,
-        ILogger<MainWindow> logger)
+        ILogger<MainWindow> logger,
+        AppConfiguration appConfiguration)
     {
         InitializeComponent();
 
@@ -44,6 +46,7 @@ public partial class MainWindow : Window
         _serialButtonConfig = serialButtonConfig ?? throw new ArgumentNullException(nameof(serialButtonConfig));
         _settingsWindowFactory = settingsWindowFactory ?? throw new ArgumentNullException(nameof(settingsWindowFactory));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _appConfiguration = appConfiguration ?? throw new ArgumentNullException(nameof(appConfiguration));
 
         Loaded += OnLoaded;
         Closing += OnClosing;
@@ -167,6 +170,24 @@ public partial class MainWindow : Window
 
         OnButton.IsEnabled = shouldEnable;
         OffButton.IsEnabled = shouldEnable;
+
+        UpdateTopmost();
+    }
+
+    /// <summary>
+    ///     最前面表示モードに応じて Topmost を更新する
+    /// </summary>
+    private void UpdateTopmost()
+    {
+        Topmost = _appConfiguration.TopmostMode switch
+        {
+            TopmostMode.Always => true,
+            TopmostMode.WhenButtonEnabled => OnButton.IsEnabled,
+            TopmostMode.WhilePlaying => (_currentGameState.Screen == GameScreen.Playing
+                                         || _currentGameState.Screen == GameScreen.Pausing)
+                                        && !_autoMode.IsEnabled,
+            _ => false
+        };
     }
 
     /// <summary>
@@ -186,6 +207,7 @@ public partial class MainWindow : Window
         {
             _settingsWindow = _settingsWindowFactory();
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.TopmostModeChanged += (_, _) => UpdateTopmost();
             _settingsWindow.Show();
         }
         else

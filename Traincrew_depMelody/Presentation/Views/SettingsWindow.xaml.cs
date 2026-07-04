@@ -15,6 +15,9 @@ public partial class SettingsWindow : Window
     private readonly IAudioProfileRepository _profileRepository;
     private readonly IAudioPlaybackService _audioPlaybackService;
     private readonly IConfigurationPersistenceService _persistence;
+    private readonly AppConfiguration _appConfiguration;
+
+    public event EventHandler<TopmostMode>? TopmostModeChanged;
 
     public SettingsWindow(
         ISerialButtonService serialButton,
@@ -22,7 +25,8 @@ public partial class SettingsWindow : Window
         ILogger<SettingsWindow> logger,
         IAudioProfileRepository profileRepository,
         IAudioPlaybackService audioPlaybackService,
-        IConfigurationPersistenceService persistence)
+        IConfigurationPersistenceService persistence,
+        AppConfiguration appConfiguration)
     {
         InitializeComponent();
 
@@ -32,6 +36,7 @@ public partial class SettingsWindow : Window
         _profileRepository = profileRepository ?? throw new ArgumentNullException(nameof(profileRepository));
         _audioPlaybackService = audioPlaybackService ?? throw new ArgumentNullException(nameof(audioPlaybackService));
         _persistence = persistence ?? throw new ArgumentNullException(nameof(persistence));
+        _appConfiguration = appConfiguration ?? throw new ArgumentNullException(nameof(appConfiguration));
 
         Loaded += OnLoaded;
         Closed += OnClosed;
@@ -44,6 +49,7 @@ public partial class SettingsWindow : Window
     {
         InitializeSerialUi();
         InitializeProfileUi();
+        InitializeTopmostUi();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -231,6 +237,68 @@ public partial class SettingsWindow : Window
         {
             _logger.LogError(ex, "プロファイル切り替えエラー");
             MessageBox.Show($"プロファイル切り替えエラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    // ─── 最前面表示 UI ────────────────────────────────────────────────
+
+    private void InitializeTopmostUi()
+    {
+        switch (_appConfiguration.TopmostMode)
+        {
+            case TopmostMode.Never:
+                RadioTopmostNever.IsChecked = true;
+                break;
+            case TopmostMode.WhenButtonEnabled:
+                RadioTopmostWhenButtonEnabled.IsChecked = true;
+                break;
+            case TopmostMode.WhilePlaying:
+                RadioTopmostWhilePlaying.IsChecked = true;
+                break;
+            case TopmostMode.Always:
+                RadioTopmostAlways.IsChecked = true;
+                break;
+        }
+        UpdateTopmostStatusLabel();
+    }
+
+    private void UpdateTopmostStatusLabel()
+    {
+        var text = _appConfiguration.TopmostMode switch
+        {
+            TopmostMode.Never => "しない",
+            TopmostMode.WhenButtonEnabled => "ボタンが押せる場合にする",
+            TopmostMode.WhilePlaying => "プレイ中(ポーズ中含め)にする",
+            TopmostMode.Always => "常にする",
+            _ => ""
+        };
+        LabelTopmostStatus.Content = $"現在: {text}";
+    }
+
+    private TopmostMode GetSelectedTopmostMode()
+    {
+        if (RadioTopmostWhenButtonEnabled.IsChecked == true) return TopmostMode.WhenButtonEnabled;
+        if (RadioTopmostWhilePlaying.IsChecked == true) return TopmostMode.WhilePlaying;
+        if (RadioTopmostAlways.IsChecked == true) return TopmostMode.Always;
+        return TopmostMode.Never;
+    }
+
+    private async void ButtonApplyTopmost_Click(object sender, RoutedEventArgs e)
+    {
+        var mode = GetSelectedTopmostMode();
+        if (mode == _appConfiguration.TopmostMode) return;
+
+        try
+        {
+            _appConfiguration.TopmostMode = mode;
+            await _persistence.SaveTopmostModeAsync(mode);
+            UpdateTopmostStatusLabel();
+            TopmostModeChanged?.Invoke(this, mode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "最前面表示設定の保存エラー");
+            MessageBox.Show($"設定保存エラー: {ex.Message}", "エラー", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }
