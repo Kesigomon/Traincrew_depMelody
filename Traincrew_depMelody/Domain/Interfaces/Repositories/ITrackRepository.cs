@@ -11,9 +11,9 @@ public interface ITrackRepository
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
     /// <param name="circuitIds">軌道回路IDのリスト（集合比較で一致するものを検索）</param>
-    /// <param name="trainClass">列車種別</param>
+    /// <param name="trainNumber">列車番号(末尾がAなら特急系統と判定)</param>
     /// <returns>該当する駅・番線情報、見つからない場合はnull</returns>
-    Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds, string trainClass);
+    Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds, string? trainNumber);
 
     /// <summary>
     ///     CSVを再読み込み(キャッシュクリア)

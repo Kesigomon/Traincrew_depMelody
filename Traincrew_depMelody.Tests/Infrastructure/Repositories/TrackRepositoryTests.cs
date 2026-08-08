@@ -37,7 +37,7 @@ public class TrackRepositoryTests : IDisposable
         var repository = new TrackRepository(_config, _mockLogger.Object);
 
         // Act
-        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_01_1", "TC_TATEHAMA_01_2" }, "普通");
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_01_1", "TC_TATEHAMA_01_2" }, null);
 
         // Assert
         track.Should().NotBeNull();
@@ -52,10 +52,52 @@ public class TrackRepositoryTests : IDisposable
         var repository = new TrackRepository(_config, _mockLogger.Object);
 
         // Act
-        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_NONEXISTENT" }, "普通");
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_NONEXISTENT" }, null);
 
         // Assert
         track.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task FindTrackByCircuitIdAsync_Tatehama2_TrainNumberEndsWithA_ReturnsTrack2()
+    {
+        // Arrange
+        var repository = new TrackRepository(_config, _mockLogger.Object);
+
+        // Act
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_02_1", "TC_TATEHAMA_02_2", "TC_TATEHAMA_02_3" }, "1206A");
+
+        // Assert
+        track.Should().NotBeNull();
+        track!.TrackNumber.Should().Be("2");
+    }
+
+    [Fact]
+    public async Task FindTrackByCircuitIdAsync_Tatehama2_TrainNumberEndsWithDigit_ReturnsTrack3()
+    {
+        // Arrange
+        var repository = new TrackRepository(_config, _mockLogger.Object);
+
+        // Act
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_02_1", "TC_TATEHAMA_02_2", "TC_TATEHAMA_02_3" }, "1206");
+
+        // Assert
+        track.Should().NotBeNull();
+        track!.TrackNumber.Should().Be("3");
+    }
+
+    [Fact]
+    public async Task FindTrackByCircuitIdAsync_Tatehama2_TrainNumberNull_ReturnsTrack3()
+    {
+        // Arrange
+        var repository = new TrackRepository(_config, _mockLogger.Object);
+
+        // Act
+        var track = await repository.FindTrackByCircuitIdAsync(new[] { "TC_TATEHAMA_02_1", "TC_TATEHAMA_02_2", "TC_TATEHAMA_02_3" }, null);
+
+        // Assert
+        track.Should().NotBeNull();
+        track!.TrackNumber.Should().Be("3");
     }
 
     [Fact]

@@ -22,7 +22,7 @@ public class TrackRepository : ITrackRepository
     /// <summary>
     ///     軌道回路IDから駅・番線情報を検索
     /// </summary>
-    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds, string trainClass)
+    public async Task<TrackInfo?> FindTrackByCircuitIdAsync(IEnumerable<string> circuitIds, string? trainNumber)
     {
         await EnsureLoadedAsync();
 
@@ -36,7 +36,7 @@ public class TrackRepository : ITrackRepository
             if (trackInfo.StationName == "館浜")
             {
                 var trackNumber = int.Parse(trackInfo.TrackNumber);
-                if((trackNumber == 2 && trainClass != "特急") || trackNumber >= 3)
+                if((trackNumber == 2 && !(trainNumber?.EndsWith('A') ?? false)) || trackNumber >= 3)
                 {
                     trackNumber += 1;
                 }
@@ -64,7 +64,7 @@ public class TrackRepository : ITrackRepository
     /// </summary>
     public async Task<bool> IsAnyCircuitAtStationAsync(IEnumerable<string> circuitIds)
     {
-        var track = await FindTrackByCircuitIdAsync(circuitIds, "普通");
+        var track = await FindTrackByCircuitIdAsync(circuitIds, null);
         return track != null;
     }
 
